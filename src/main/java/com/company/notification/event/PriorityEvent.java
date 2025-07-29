@@ -9,13 +9,10 @@ public class PriorityEvent implements Event {
     private final String message;
     private final String sourcePublisherId;
 
-    public PriorityEvent(Priority priority, LocalDateTime timeStamp, String message, String sourcePublisherId) {
+    public PriorityEvent(Priority priority, String message, String sourcePublisherId) {
        // null check
         if (priority == null) {
             throw new IllegalArgumentException("Priority cannot be null");
-        }
-        if (timeStamp == null) {
-            throw new IllegalArgumentException("Timestamp cannot be null");
         }
         if (message == null || message.isEmpty()) {
             throw new IllegalArgumentException("Message cannot be null or empty");
@@ -24,7 +21,7 @@ public class PriorityEvent implements Event {
             throw new IllegalArgumentException("Source publisher ID cannot be null or empty");
         }
         this.priority = priority;
-        this.timeStamp = timeStamp;
+        this.timeStamp = LocalDateTime.now();
         this.message = message;
         this.sourcePublisherId = sourcePublisherId;
     }

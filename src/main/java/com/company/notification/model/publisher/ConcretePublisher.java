@@ -34,7 +34,7 @@ public class ConcretePublisher implements Publisher {
 
     @Override
     public String getId() {
-        return "";
+        return id;
     }
 
 

@@ -35,21 +35,21 @@ private ScheduledExecutorService scheduler;
 
 
     public void start() {
-        //create a scheduler
-        scheduler= Executors.newSingleThreadScheduledExecutor(r->{
+        scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r);
             t.setDaemon(true);
-            t.setName("HeartbeatScheduler-"+publisher.getName());
+            t.setName("HeartbeatScheduler-" + publisher.getName());
             return t;
         });
 
-        //associate the scheduler with the publisher and start the scheduler
-        scheduler.scheduleAtFixedRate(()-> {
+        scheduler.scheduleAtFixedRate(() -> {
+
             HeartBeatEvent heartBeatEvent = new HeartBeatEvent(publisher.getId());
-            System.out.println("heartBeatEvent dispatched from " +publisher.getName());
+            System.out.println("🕒 [" + Thread.currentThread().getName() + "] Heartbeat #" +
+                    " from " + publisher.getName() + " at " + LocalDateTime.now());
             eventBus.publishFromPublisher(publisher, heartBeatEvent);
-        },0,intervalSeconds, TimeUnit.SECONDS);
-        };
+        }, 0, intervalSeconds, TimeUnit.SECONDS);
+    }
 
 
     public  void shutdown() {
