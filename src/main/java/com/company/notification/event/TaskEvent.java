@@ -6,13 +6,29 @@ import java.util.Objects;
 public class TaskEvent implements Event {
     private final String taskDescription;
     private final String taskName;
+    private final String sourcePublisherId;
     private final LocalDateTime timeStamp;
     private final Priority priority;
 
-    public TaskEvent(String taskDescription, String taskName, LocalDateTime timeStamp, Priority priority) {
+
+    public TaskEvent(String taskName,String taskDescription , String sourcePublisherId, Priority priority) {
+        //null check
+        if (taskDescription == null || taskDescription.isEmpty()) {
+            throw new IllegalArgumentException("Task description cannot be null or empty");
+        }
+        if (taskName == null || taskName.isEmpty()) {
+            throw new IllegalArgumentException("Task name cannot be null or empty");
+        }
+        if (sourcePublisherId == null || sourcePublisherId.isEmpty()) {
+            throw new IllegalArgumentException("Source publisher ID cannot be null or empty");
+        }
+        if (priority == null) {
+            throw new IllegalArgumentException("Priority cannot be null");
+        }
         this.taskDescription = taskDescription;
         this.taskName = taskName;
-        this.timeStamp = timeStamp;
+        this.sourcePublisherId = sourcePublisherId;
+        this.timeStamp = LocalDateTime.now();
         this.priority = priority;
     }
 
@@ -34,12 +50,17 @@ public class TaskEvent implements Event {
 
     @Override
     public EventTypes getType() {
-        return null;
+        return EventTypes.TASK;
     }
 
     @Override
     public LocalDateTime getDateTime() {
-        return null;
+        return timeStamp;
+    }
+
+    @Override
+    public String getSourcePublisherId() {
+        return sourcePublisherId;
     }
 
 
