@@ -66,15 +66,19 @@ public class TaskEvent implements Event {
 
     @Override
     public boolean equals(Object o) {
+        if (this == o) return true;
         if (!(o instanceof TaskEvent taskEvent)) return false;
-        return Objects.equals(taskDescription, taskEvent.taskDescription) && Objects.equals(taskName, taskEvent.taskName) && Objects.equals(timeStamp, taskEvent.timeStamp) && Objects.equals(priority, taskEvent.priority);
+        return Objects.equals(taskDescription, taskEvent.taskDescription)
+                && Objects.equals(taskName, taskEvent.taskName)
+                && Objects.equals(sourcePublisherId, taskEvent.sourcePublisherId)
+                && Objects.equals(timeStamp, taskEvent.timeStamp)
+                && Objects.equals(priority, taskEvent.priority);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(taskDescription, taskName, timeStamp,priority);
+        return Objects.hash(taskDescription, taskName, sourcePublisherId, timeStamp, priority);
     }
-
 
     @Override
     public String toString() {

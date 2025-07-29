@@ -67,4 +67,12 @@ public class UserSubscriber extends BaseSubscriber implements Subscriber{
     public int hashCode() {
         return Objects.hash(id, name, createdAt);
     }
+
+    @Override
+    public String toString() {
+        return "UserSubscriber{" +
+                ", name='" + name + '\'' +
+                ", createdAt=" + createdAt +
+                '}';
+    }
 }

@@ -21,25 +21,24 @@ public class EventBus {
     private final Map<Subscriber, EventFilter> subscriberFilterMap = new ConcurrentHashMap<>();
 
     // Set of admin subscribers who receive all events
-    private final Set<Subscriber> adminSubscribers = Collections.synchronizedSet(new HashSet<>());
+    private final Set<Subscriber> adminSubscribers = ConcurrentHashMap.newKeySet();
 
     private final Subscriber dummyAdmin;
+    private final EventHistory eventHistory ;
 
 
-    public EventBus() {
+    public EventBus(EventHistory eventHistory) {
+        this.eventHistory = eventHistory;
         // Automatically register dummy admin
         dummyAdmin = new AdminSubscriber("DummyAdmin", event -> true); // Accept all events
         adminSubscribers.add(dummyAdmin);
         subscriberFilterMap.put(dummyAdmin, dummyAdmin.getFilter());
-
         System.out.println(" SystemAdmin (default admin) registered.");
     }
 
     public Subscriber getDummyAdmin() {
         return dummyAdmin;
     }
-
-
 
 
     /**
@@ -117,16 +116,14 @@ public class EventBus {
             subscribers.remove(subscriber);
         }
 
-        Set<Publisher> publishers = subscriberPublisherMap.get(subscriber);
-        if (publishers != null) {
-            publishers.remove(publisher);
-        }
-
-        // Remove filter only if subscriber has no more subscriptions and is not an admin
-        if (subscriberPublisherMap.getOrDefault(subscriber, Set.of()).isEmpty()
-                && !adminSubscribers.contains(subscriber)) {
-            subscriberFilterMap.remove(subscriber);
-        }
+        subscriberPublisherMap.computeIfPresent(subscriber, (sub, pubs) -> {
+            pubs.remove(publisher);
+            if (pubs.isEmpty() && !adminSubscribers.contains(sub)) {
+                subscriberFilterMap.remove(sub);
+                return null; // Clean up the subscriber entry
+            }
+            return pubs;
+        });
     }
 
 
@@ -148,23 +145,29 @@ public class EventBus {
             throw new IllegalArgumentException("Event cannot be null");
         }
 
-        // Send to regular subscribers
-        Set<Subscriber> subscribers = publisherSubscriberMap.getOrDefault(publisher, Set.of());
 
+        // Send to regular subscribers (copy to avoid concurrent modification)
+        Set<Subscriber> subscribers = new HashSet<>(publisherSubscriberMap.getOrDefault(publisher, Set.of()));
         for (Subscriber subscriber : subscribers) {
-            EventFilter filter = subscriberFilterMap.get(subscriber);
-            if (filter == null || filter.shouldProcess(event)) {
+            EventFilter filter = subscriberFilterMap.getOrDefault(subscriber, e -> true);
+            if (filter.shouldProcess(event)) {
                 subscriber.enqueue(event);
             }
         }
 
-        synchronized (adminSubscribers) {
-            for (Subscriber admin : adminSubscribers) {
-                EventFilter filter = subscriberFilterMap.get(admin);
-                if (filter == null || filter.shouldProcess(event)) {
-                    admin.enqueue(event);
-                }
+        // Defensive copy of adminSubscribers set
+        for (Subscriber admin : new HashSet<>(adminSubscribers)) {
+            EventFilter filter = subscriberFilterMap.get(admin);
+            if (filter == null || filter.shouldProcess(event)) {
+                admin.enqueue(event);
             }
         }
+
+        // Log the event
+        eventHistory.logEvent(event,publisher);
     }
+
+
+
+
 }

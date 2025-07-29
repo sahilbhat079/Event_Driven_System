@@ -1,5 +1,6 @@
 package com.company.notification.model.publisher;
 
+import com.company.notification.core.EventBus;
 import com.company.notification.event.Event;
 
 import java.time.LocalDateTime;
@@ -23,8 +24,14 @@ public class ConcretePublisher implements Publisher {
 
 
     @Override
-    public void publish(Event event) {
-
+    public void publish(EventBus eventBus, Event event) {
+        if (eventBus == null) {
+            throw new IllegalArgumentException("Event bus cannot be null");
+        }
+        if (event == null) {
+            throw new IllegalArgumentException("Event cannot be null");
+        }
+        eventBus.publishFromPublisher(this, event);
     }
 
     @Override

@@ -1,6 +1,5 @@
 package com.company.notification.core;
 
-import com.company.notification.event.Event;
 import com.company.notification.event.HeartBeatEvent;
 import com.company.notification.event.Priority;
 import com.company.notification.model.publisher.Publisher;
@@ -43,7 +42,6 @@ private ScheduledExecutorService scheduler;
      * event bus at the specified interval. The executor will be daemonize and will not
      * prevent the JVM from exiting.
      */
-/* <<<<<<<<<<  8bdf5b7e-40ba-4bf2-92d2-0b5cc1431abb  >>>>>>>>>>> */
     public void start() {
         scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r);
