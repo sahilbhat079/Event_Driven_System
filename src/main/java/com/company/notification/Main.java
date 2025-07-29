@@ -3,86 +3,122 @@ package com.company.notification;
 import com.company.notification.core.EventBus;
 import com.company.notification.core.SchedulerManager;
 import com.company.notification.event.Priority;
+import com.company.notification.event.PriorityEvent;
 import com.company.notification.event.TaskEvent;
+import com.company.notification.filters.AlwaysTrueFilter;
 import com.company.notification.filters.EventFilter;
 import com.company.notification.filters.PriorityFilter;
+import com.company.notification.filters.TimeWindowFilter;
 import com.company.notification.model.publisher.ConcretePublisher;
 import com.company.notification.model.publisher.Publisher;
 import com.company.notification.model.subscriber.AdminSubscriber;
 import com.company.notification.model.subscriber.Subscriber;
 import com.company.notification.model.subscriber.UserSubscriber;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+import java.time.LocalTime;
 public class Main {
     public static void main(String[] args) throws InterruptedException {
-
         System.out.println(" Starting Event-Driven Notification System...");
 
-        // 1. Create core components
+        // 1. Core setup
         EventBus eventBus = new EventBus();
         SchedulerManager schedulerManager = new SchedulerManager(eventBus);
         Publisher publisher = new ConcretePublisher("SystemPublisher");
         eventBus.registerPublisher(publisher);
 
-        // 2. Create subscribers with different priority filters
-        Subscriber highSub = new UserSubscriber("Alice-HIGH", new PriorityFilter(Priority.HIGH));
-        Subscriber mediumSub = new UserSubscriber("Bob-MEDIUM", new PriorityFilter(Priority.MEDIUM));
-        Subscriber lowSub = new UserSubscriber("Charlie-LOW", new PriorityFilter(Priority.LOW));
+        // 2. Filters
+        PriorityFilter highPriorityFilter = new PriorityFilter(Priority.HIGH);
+        PriorityFilter lowPriorityFilter = new PriorityFilter(Priority.LOW);
+        AlwaysTrueFilter alwaysTrueFilter = new AlwaysTrueFilter();
 
-        // 3. Subscribe them
-        eventBus.subscribe(highSub, publisher, highSub.getFilter());
-        eventBus.subscribe(mediumSub, publisher, mediumSub.getFilter());
-        eventBus.subscribe(lowSub, publisher, lowSub.getFilter());
+        LocalTime now = LocalTime.now();
+        TimeWindowFilter timeWindowFilter = new TimeWindowFilter(now.minusSeconds(5), now.plusSeconds(10));
 
-        // 4. Send multiple TaskEvents from publisher
-        System.out.println("\n Sending TaskEvents...");
+        // 3. Subscribers
+        Subscriber highUser = new UserSubscriber("Alice-HIGH", highPriorityFilter);
+        Subscriber lowUser = new UserSubscriber("Charlie-LOW", lowPriorityFilter);
+        Subscriber timeWindowUser = new UserSubscriber("Time-Window", timeWindowFilter);
+        Subscriber admin = new AdminSubscriber("Admin", alwaysTrueFilter);
+        eventBus.registerAdminSubscriber(admin, alwaysTrueFilter);
 
-        sendEvent(publisher, eventBus, "Fix Critical Bug", "Memory leak issue", Priority.HIGH);
+        // 4. Subscriptions
+        eventBus.subscribe(highUser, publisher, highUser.getFilter());
+        eventBus.subscribe(lowUser, publisher, lowUser.getFilter());
+        eventBus.subscribe(timeWindowUser, publisher, timeWindowUser.getFilter());
+
+        // 5. Scheduler (heartbeat)
+        schedulerManager.registerScheduler(publisher, 2); // Every 2 seconds
+
+        // 6. Publish task events
+        sendTaskEvent(eventBus, publisher, "Critical Fix", "Memory bug", Priority.HIGH);
         Thread.sleep(500);
-        sendEvent(publisher, eventBus, "Feature Update", "UI enhancements", Priority.MEDIUM);
+        sendTaskEvent(eventBus, publisher, "UI Update", "Dark mode", Priority.LOW);
         Thread.sleep(500);
-        sendEvent(publisher, eventBus, "Log Cleanup", "Remove old logs", Priority.LOW);
+        sendTaskEvent(eventBus, publisher, "Retry Setup", "Resend payment", Priority.MEDIUM);
         Thread.sleep(500);
-        sendEvent(publisher, eventBus, "Payment Failure", "Retry mechanism", Priority.HIGH);
-        Thread.sleep(500);
-        sendEvent(publisher, eventBus, "Optimize Query", "Improve DB performance", Priority.MEDIUM);
 
-        // 5. Let each subscriber process their queue
-        System.out.println("\n Processing all subscriber queues:\n");
+        // 7. Publish a PriorityEvent
+        PriorityEvent pEvent = new PriorityEvent("System Alert", Priority.HIGH, "Database down", publisher.getId());
+        System.out.println("➡ Publishing PriorityEvent: " + pEvent.getMessage());
+        eventBus.publishFromPublisher(publisher, pEvent);
 
-        highSub.processQueue();
-        mediumSub.processQueue();
-        lowSub.processQueue();
+        // Wait to allow heartbeat events
+        Thread.sleep(6000);
 
-        // Use a filter that accepts all events
-        EventFilter allowAll = event -> true;
-
-        Subscriber admin = new AdminSubscriber("SystemAdmin", allowAll);
-        eventBus.subscribe(admin, publisher, admin.getFilter());
-
-// Wait some time to allow heartbeat or tasks to be delivered
-        Thread.sleep(5000);
-
+        // 8. Process all queues
+        System.out.println("\n Processing queues...");
+        highUser.processQueue();
+        lowUser.processQueue();
+        timeWindowUser.processQueue();
         admin.processQueue();
 
-
-
-
-
-        // 6. Shutdown any scheduled processes if added
+        // 9. Shutdown
         schedulerManager.shutdownAllSchedulers();
-
-        System.out.println("\n Test completed.");
+        System.out.println("\n All schedulers stopped. Test complete.");
     }
 
-    private static void sendEvent(Publisher publisher, EventBus eventBus, String title, String desc, Priority priority) {
-        TaskEvent event = new TaskEvent(title, desc, publisher.getId(), priority);
-        System.out.println("➡ Publishing: " + title + " [Priority: " + priority + "]");
+    private static void sendTaskEvent(EventBus eventBus, Publisher publisher, String name, String desc, Priority priority) {
+        TaskEvent event = new TaskEvent(name, desc, publisher.getId(), priority);
+        System.out.println("➡ Publishing TaskEvent: " + name + " [Priority: " + priority + "]");
         eventBus.publishFromPublisher(publisher, event);
     }
+    public static void  test(){
+        System.out.println("🔔 Starting Event-Driven Notification System...");
 
+        // 1. Core Setup
+        EventBus eventBus = new EventBus();
+        SchedulerManager schedulerManager = new SchedulerManager(eventBus);
 
+        Publisher publisher = new ConcretePublisher("SystemPublisher");
+        eventBus.registerPublisher(publisher);
+
+        // 2. Admin Setup (receives all events including heartbeat)
+        EventFilter allowAll = event -> true;
+        Subscriber admin = new AdminSubscriber("SuperAdmin", allowAll);
+        eventBus.registerAdminSubscriber(admin, allowAll);
+
+        // 3. Start Scheduler (heartbeat every 2 seconds)
+        schedulerManager.registerScheduler(publisher, 2); // 2 seconds
+
+        // 4. Let the system run for a while and process periodically
+        int runtimeSeconds = 20; // run for 20 seconds
+        for (int i = 1; i <= runtimeSeconds; i++) {
+            try {
+                Thread.sleep(1000); // 1 second sleep
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            if (i % 5 == 0) {
+                System.out.println("\n⏳ Time: " + i + " seconds elapsed. Processing admin queue...");
+                admin.processQueue();
+            }
+        }
+
+        // 5. Shutdown
+        System.out.println("\n🛑 Stopping all schedulers...");
+        schedulerManager.shutdownAllSchedulers();
+        System.out.println("✅ System terminated.");
+    }
 
 
 

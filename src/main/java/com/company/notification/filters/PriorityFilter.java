@@ -12,6 +12,14 @@ public class PriorityFilter implements EventFilter {
 
     @Override
     public boolean shouldProcess(Event event) {
-        return event.getPriority().ordinal()<=priority.ordinal();
+        return event.getPriority() == priority;
+    }
+
+
+    @Override
+    public String toString() {
+        return "PriorityFilter{" +
+                "priority=" + priority +
+                '}';
     }
 }

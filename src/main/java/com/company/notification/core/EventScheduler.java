@@ -2,6 +2,7 @@ package com.company.notification.core;
 
 import com.company.notification.event.Event;
 import com.company.notification.event.HeartBeatEvent;
+import com.company.notification.event.Priority;
 import com.company.notification.model.publisher.Publisher;
 
 import java.time.LocalDateTime;
@@ -34,6 +35,15 @@ private ScheduledExecutorService scheduler;
 
 
 
+/* <<<<<<<<<<<<<<  ✨ Windsurf Command ⭐ >>>>>>>>>>>>>>>> */
+    /**
+     * Start the heartbeat scheduler.
+     * <p>
+     * This method will schedule a single-threaded executor to send heartbeats to the
+     * event bus at the specified interval. The executor will be daemonize and will not
+     * prevent the JVM from exiting.
+     */
+/* <<<<<<<<<<  8bdf5b7e-40ba-4bf2-92d2-0b5cc1431abb  >>>>>>>>>>> */
     public void start() {
         scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r);
@@ -44,7 +54,7 @@ private ScheduledExecutorService scheduler;
 
         scheduler.scheduleAtFixedRate(() -> {
 
-            HeartBeatEvent heartBeatEvent = new HeartBeatEvent(publisher.getId());
+            HeartBeatEvent heartBeatEvent = new HeartBeatEvent(publisher.getId(), Priority.MEDIUM);
             System.out.println("🕒 [" + Thread.currentThread().getName() + "] Heartbeat #" +
                     " from " + publisher.getName() + " at " + LocalDateTime.now());
             eventBus.publishFromPublisher(publisher, heartBeatEvent);

@@ -4,13 +4,15 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class PriorityEvent implements Event {
+    private final String taskName;
     private final Priority priority;
     private final LocalDateTime timeStamp;
     private final String message;
     private final String sourcePublisherId;
 
-    public PriorityEvent(Priority priority, String message, String sourcePublisherId) {
-       // null check
+    public PriorityEvent(String taskName, Priority priority, String message, String sourcePublisherId) {
+        this.taskName = taskName;
+        // null check
         if (priority == null) {
             throw new IllegalArgumentException("Priority cannot be null");
         }
@@ -45,7 +47,7 @@ public class PriorityEvent implements Event {
 
     @Override
     public LocalDateTime getDateTime() {
-        return null;
+        return timeStamp;
     }
 
     @Override
@@ -62,5 +64,14 @@ public class PriorityEvent implements Event {
     @Override
     public int hashCode() {
         return Objects.hash(priority, timeStamp, message);
+    }
+
+
+    @Override
+    public String toString() {
+        return  "PriorityEvent{" +
+                "taskName='" + taskName + '\'' +
+                ", priority=" + priority +
+                ", message='" + message + '\'' ;
     }
 }

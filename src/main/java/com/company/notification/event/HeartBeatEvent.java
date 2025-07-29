@@ -1,14 +1,17 @@
 package com.company.notification.event;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 public class HeartBeatEvent implements Event {
     private final LocalDateTime timeStamp;
     private final String publisherId;
+    private final Priority priority ;
 
-    public HeartBeatEvent(String publisherId) {
+    public HeartBeatEvent(String publisherId, Priority priority) {
         this.timeStamp = LocalDateTime.now();
         this.publisherId = publisherId;
+        this.priority = priority;
     }
 
 
@@ -29,8 +32,27 @@ public class HeartBeatEvent implements Event {
 
     @Override
     public Priority getPriority() {
-        return Priority.LOW;
+        return priority;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof HeartBeatEvent that)) return false;
+        return Objects.equals(timeStamp, that.timeStamp) && Objects.equals(publisherId, that.publisherId) && priority == that.priority;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(timeStamp, publisherId, priority);
     }
 
 
+    @Override
+    public String toString() {
+        return "HeartBeatEvent{" +
+                "timeStamp=" + timeStamp +
+                ", publisherId='" + publisherId + '\'' +
+                ", priority=" + priority +
+                '}';
+    }
 }

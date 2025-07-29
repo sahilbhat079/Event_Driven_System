@@ -74,4 +74,13 @@ public class TaskEvent implements Event {
     public int hashCode() {
         return Objects.hash(taskDescription, taskName, timeStamp,priority);
     }
+
+
+    @Override
+    public String toString() {
+        return "TaskEvent{" +
+                "taskName='" + taskName + '\'' +
+                ", taskDescription='" + taskDescription + '\'' +
+                '}';
+    }
 }

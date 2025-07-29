@@ -24,15 +24,15 @@ public class AdminSubscriber extends BaseSubscriber implements Subscriber {
     @Override
     public void enqueue(Event event) {
         if (event == null) {
-            System.out.println("[Admin: " + name + "] Null event ignored.");
+            System.out.println("Admin: " + name + "] Null event ignored.");
             return;
         }
 
         if (eventFilter.shouldProcess(event)) {
             queue.offer(event);
-            System.out.println(" [Admin: " + name + "] Event added to queue: " + event);
+            System.out.println("Admin: " + name + "] Event added to queue: " + event);
         } else {
-            System.out.println("[Admin: " + name + "] Event filtered out: " + event);
+            System.out.println("Admin: " + name + "] Event filtered out: " + event);
         }
     }
 
