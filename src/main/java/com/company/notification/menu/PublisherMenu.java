@@ -1,24 +1,25 @@
 package com.company.notification.menu;
 
 import com.company.notification.core.EventBus;
-import com.company.notification.core.EventScheduler;
 import com.company.notification.core.SchedulerManager;
 import com.company.notification.event.HeartBeatEvent;
 import com.company.notification.event.Priority;
 import com.company.notification.event.PriorityEvent;
 import com.company.notification.event.TaskEvent;
 import com.company.notification.model.publisher.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Scanner;
-import java.util.logging.Logger;
 
 public class PublisherMenu {
+
+    private static final Logger logger = LoggerFactory.getLogger(PublisherMenu.class);
 
     private final EventBus eventBus;
     private final Publisher publisher;
     private final SchedulerManager schedulerManager;
     private final Scanner scanner;
-    private static final Logger logger = Logger.getLogger(PublisherMenu.class.getName());
 
     public PublisherMenu(EventBus eventBus, Publisher publisher, SchedulerManager schedulerManager, Scanner scanner) {
         if (eventBus == null) {
@@ -56,7 +57,7 @@ public class PublisherMenu {
                 case "2" -> startReminder();
                 case "3" -> stopReminder();
                 case "4" -> {
-                    System.out.println("Exiting Publisher Menu...");
+                    logger.info("Exiting Publisher Menu for publisher: {}", publisher.getName());
                     return;
                 }
                 default -> System.out.println("Invalid choice.");
@@ -72,32 +73,35 @@ public class PublisherMenu {
         String desc = scanner.nextLine();
 
         if (name == null || name.isBlank() || desc == null || desc.isBlank()) {
+            logger.warn("Task name or description was empty");
             System.out.println("Task name and description cannot be empty.");
             return;
         }
 
         Priority priority = askPriority();
-//        in this based on the priority we will create a different type of event
 
         if (priority == null) {
+            logger.warn("User did not select a valid priority");
             System.out.println("Priority cannot be null.");
             return;
         }
 
-        if(priority == Priority.HIGH ) {
-            PriorityEvent highPriorityEvent = new PriorityEvent(name,  priority,desc, publisher.getId());
-            eventBus.publishFromPublisher(publisher, highPriorityEvent);
-
-        }
-
-        if(priority == Priority.MEDIUM) {
-            HeartBeatEvent heartBeatEvent = new HeartBeatEvent(publisher.getId(), priority, name, desc);
-            publisher.publish(eventBus,heartBeatEvent);
-        }
-
-        if(priority == Priority.LOW) {
-            TaskEvent event = new TaskEvent(name, desc, publisher.getId(), priority);
-            eventBus.publishFromPublisher(publisher, event);
+        switch (priority) {
+            case HIGH -> {
+                PriorityEvent event = new PriorityEvent(name, priority, desc, publisher.getId());
+                eventBus.publishFromPublisher(publisher, event);
+                logger.info("Published HIGH priority event from publisher: {}", publisher.getName());
+            }
+            case MEDIUM -> {
+                HeartBeatEvent event = new HeartBeatEvent(publisher.getId(), priority, name, desc);
+                publisher.publish(eventBus, event);
+                logger.info("Published MEDIUM priority heartbeat event from publisher: {}", publisher.getName());
+            }
+            case LOW -> {
+                TaskEvent event = new TaskEvent(name, desc, publisher.getId(), priority);
+                eventBus.publishFromPublisher(publisher, event);
+                logger.info("Published LOW priority task event from publisher: {}", publisher.getName());
+            }
         }
 
         System.out.println("Task event published successfully.");
@@ -105,9 +109,11 @@ public class PublisherMenu {
 
     private void startReminder() {
         if (!eventBus.hasSubscribers(publisher)) {
-            logger.warning("Cannot start reminder — no subscribers for publisher: " + publisher.getName());
+            logger.warn("Cannot start reminder — no subscribers for publisher: {}", publisher.getName());
+            System.out.println("Cannot start reminder — no subscribers for this publisher.");
             return;
         }
+
         System.out.print("Enter reminder interval (seconds): ");
         try {
             String input = scanner.nextLine();
@@ -118,8 +124,10 @@ public class PublisherMenu {
 
             long interval = Long.parseLong(input);
             schedulerManager.registerScheduler(publisher, interval);
+            logger.info("Started reminder scheduler for publisher: {} with interval: {}s", publisher.getName(), interval);
             System.out.println("Reminder started for every " + interval + " seconds.");
         } catch (NumberFormatException e) {
+            logger.error("Invalid interval entered by user: not a number");
             System.out.println("Invalid interval.");
         }
     }
@@ -143,7 +151,6 @@ public class PublisherMenu {
 
             input = input.trim();
 
-            // Try parsing as a number (1-based index)
             try {
                 int choice = Integer.parseInt(input);
                 if (choice >= 1 && choice <= priorities.length) {
@@ -153,10 +160,8 @@ public class PublisherMenu {
                     continue;
                 }
             } catch (NumberFormatException ignored) {
-                // Fall back to parsing as enum name
             }
 
-            // Try matching the input to a priority name
             try {
                 return Priority.valueOf(input.toUpperCase());
             } catch (IllegalArgumentException e) {
@@ -165,10 +170,8 @@ public class PublisherMenu {
         }
     }
 
-
-
     private void stopReminder() {
         schedulerManager.shutdownScheduler(publisher);
+        logger.info("Stopped reminder scheduler for publisher: {}", publisher.getName());
     }
-
 }

@@ -29,6 +29,8 @@ public class UserSubscriber extends BaseSubscriber implements Subscriber{
             queue.offer(event);
     }
 
+
+
     @Override
     public void processQueue() {
         if (queue.isEmpty()) {
@@ -42,17 +44,18 @@ public class UserSubscriber extends BaseSubscriber implements Subscriber{
             Event event = queue.poll();
             if (event instanceof com.company.notification.event.TaskEvent taskEvent) {
                 System.out.println("\u001B[36m[Task Event]\u001B[0m");
-                System.out.println("\u001B[36m  Task Name: \u001B[0m" + taskEvent.getTaskName());
-                System.out.println("\u001B[36m  Description: \u001B[0m" + taskEvent.getTaskDescription());
+                System.out.println("\u001B[36m  Task Name     : \u001B[0m" + taskEvent.getTaskName());
+                System.out.println("\u001B[36m  Description   : \u001B[0m" + taskEvent.getTaskDescription());
 
             } else if (event instanceof com.company.notification.event.PriorityEvent priorityEvent) {
                 System.out.println("\u001B[33m[Priority Event]\u001B[0m");
+                System.out.println("\u001B[33m  Task Name     : \u001B[0m" + priorityEvent.getTaskName());
                 System.out.println("\u001B[33m  Priority Level: \u001B[0m" + priorityEvent.getPriority());
 
-            } else if (event instanceof com.company.notification.event.HeartBeatEvent) {
-                System.out.println("\u001B[35m[Heartbeat Event]\u001B[0m");
-                System.out.println("\u001B[35m  Sending periodic heartbeat...\u001B[0m");
-
+            } else if (event instanceof com.company.notification.event.HeartBeatEvent heartbeatEvent) {
+                System.out.println("\u001B[32m[Heartbeat Event]\u001B[0m");
+                System.out.println("\u001B[32m  Sending periodic heartbeat...\u001B[0m");
+                System.out.println("\u001B[32m  Priority Level: \u001B[0m" + heartbeatEvent.getPriority());
             } else {
                 System.out.println("\u001B[90m[Unknown Event] \u001B[0m" + event);
             }

@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class PriorityEvent implements Event {
+
     private final String taskName;
     private final Priority priority;
     private final LocalDateTime timeStamp;
@@ -36,7 +37,9 @@ public class PriorityEvent implements Event {
         return timeStamp;
     }
 
-
+    public String getTaskName() {
+        return taskName;
+    }
 
     @Override
     public EventTypes getType() {
@@ -55,13 +58,18 @@ public class PriorityEvent implements Event {
 
     @Override
     public boolean equals(Object o) {
+        if (this == o) return true;
         if (!(o instanceof PriorityEvent that)) return false;
-        return priority == that.priority && Objects.equals(timeStamp, that.timeStamp) && Objects.equals(taskDescription, that.taskDescription);
+        return priority == that.priority
+                && Objects.equals(timeStamp, that.timeStamp)
+                && Objects.equals(taskName, that.taskName)
+                && Objects.equals(taskDescription, that.taskDescription)
+                && Objects.equals(sourcePublisherId, that.sourcePublisherId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(priority, timeStamp, taskDescription);
+        return Objects.hash(priority, timeStamp, taskName, taskDescription, sourcePublisherId);
     }
 
 

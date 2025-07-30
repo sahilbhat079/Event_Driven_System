@@ -25,7 +25,6 @@ public class Main {
     public static void main(String[] args) {
 
         logger.info("Starting notification system...");
-        System.out.println("Starting Notification System...");
 
         Map<String, Publisher> publisherMap = new HashMap<>();
         Map<String, Subscriber> subscriberMap = new HashMap<>();

@@ -3,15 +3,12 @@ package com.company.notification.menu;
 
 import com.company.notification.core.EventBus;
 import com.company.notification.core.EventHistory;
-import com.company.notification.event.Event;
 import com.company.notification.model.subscriber.Subscriber;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.List;
-import java.util.Objects;
-import java.util.Scanner;
+import java.util.*;
 
 public class AdminMenu {
     private final EventBus eventBus;
@@ -148,12 +145,17 @@ public class AdminMenu {
     }
 
 
-
-
     private void countEventsByType() {
         System.out.println("\nEvent Counts by Type:");
-        eventHistory.countEventsByType()
-                .forEach((type, count) -> System.out.println(type + ": " + count));
+
+        Optional<Map<String, Long>> optionalCounts = Optional.ofNullable(eventHistory.countEventsByType());
+
+        optionalCounts
+                .filter(map -> !map.isEmpty())
+                .ifPresentOrElse(
+                        map -> map.forEach((type, count) -> System.out.println(type + ": " + count)),
+                        () -> System.out.println("No events have been published yet.")
+                );
     }
 
     private void clearHistory() {

@@ -8,78 +8,52 @@ import com.company.notification.model.subscriber.Subscriber;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 
 public class EventBus {
 
-    // Maps Publisher to their Subscribers
+    private static final Logger logger = Logger.getLogger(EventBus.class.getName());
+
     private final Map<Publisher, Set<Subscriber>> publisherSubscriberMap = new ConcurrentHashMap<>();
-
-    // Maps Subscriber to the Publishers they follow
     private final Map<Subscriber, Set<Publisher>> subscriberPublisherMap = new ConcurrentHashMap<>();
-
-    // Maps Subscriber to its assigned filter
     private final Map<Subscriber, EventFilter> subscriberFilterMap = new ConcurrentHashMap<>();
-
-    // Set of admin subscribers who receive all events
     private final Set<Subscriber> adminSubscribers = ConcurrentHashMap.newKeySet();
 
     private final AdminSubscriber dummyAdmin;
-    private final EventHistory eventHistory ;
-
+    private final EventHistory eventHistory;
 
     public EventBus(EventHistory eventHistory) {
         this.eventHistory = eventHistory;
-        // Automatically register dummy admin
         dummyAdmin = new AdminSubscriber("DummyAdmin", event -> true); // Accept all events
         adminSubscribers.add(dummyAdmin);
         subscriberFilterMap.put(dummyAdmin, dummyAdmin.getFilter());
-        System.out.println(" SystemAdmin (default admin) registered.");
+        logger.info("SystemAdmin (DummyAdmin) registered.");
     }
 
     public AdminSubscriber getDummyAdmin() {
         return dummyAdmin;
     }
 
-
-    /**
-     * Register a new publisher in the system
-     */
     public void registerPublisher(Publisher publisher) {
         if (publisher == null) {
             throw new IllegalArgumentException("Publisher cannot be null");
         }
         publisherSubscriberMap.putIfAbsent(publisher, ConcurrentHashMap.newKeySet());
+        logger.info("Publisher registered: " + publisher.getName());
     }
 
-
-
-    /**
-     * Register an admin subscriber who should receive all events
-     */
     public void registerAdminSubscriber(Subscriber admin, EventFilter filter) {
         if (admin == null || filter == null) {
             throw new IllegalArgumentException("Admin subscriber or filter cannot be null");
         }
         adminSubscribers.add(admin);
         subscriberFilterMap.put(admin, filter);
+        logger.info("Admin subscriber registered: " + admin.getName());
     }
 
-
-
-
-
-    /**
-     * Subscribe a subscriber to a publisher with a filter
-     */
     public void subscribe(Subscriber subscriber, Publisher publisher, EventFilter filter) {
-        if (subscriber == null) {
-            throw new IllegalArgumentException("Subscriber cannot be null");
-        }
-        if (publisher == null) {
-            throw new IllegalArgumentException("Publisher cannot be null");
-        }
-        if (filter == null) {
-            throw new IllegalArgumentException("Filter cannot be null");
+        if (subscriber == null || publisher == null || filter == null) {
+            throw new IllegalArgumentException("Subscriber, Publisher, or Filter cannot be null");
         }
 
         publisherSubscriberMap
@@ -91,21 +65,9 @@ public class EventBus {
                 .add(publisher);
 
         subscriberFilterMap.put(subscriber, filter);
+        logger.info(subscriber.getName() + " subscribed to " + publisher.getName());
     }
 
-
-
-
-
-
-
-
-
-
-
-    /**
-     * Unsubscribe a subscriber from a publisher
-     */
     public void unsubscribe(Subscriber subscriber, Publisher publisher) {
         if (subscriber == null || publisher == null) {
             throw new IllegalArgumentException("Subscriber or Publisher cannot be null");
@@ -120,23 +82,15 @@ public class EventBus {
             pubs.remove(publisher);
             if (pubs.isEmpty() && !adminSubscribers.contains(sub)) {
                 subscriberFilterMap.remove(sub);
-                return null; // Clean up the subscriber entry
+                logger.info("Subscriber removed completely: " + sub.getName());
+                return null;
             }
             return pubs;
         });
+
+        logger.info(subscriber.getName() + " unsubscribed from " + publisher.getName());
     }
 
-
-
-
-
-
-
-
-
-    /**
-     * Publish an event from a publisher to all its subscribers and all admins
-     */
     public void publishFromPublisher(Publisher publisher, Event event) {
         if (publisher == null) {
             throw new IllegalArgumentException("Publisher cannot be null");
@@ -145,35 +99,29 @@ public class EventBus {
             throw new IllegalArgumentException("Event cannot be null");
         }
 
-
-        // Send to regular subscribers (copy to avoid concurrent modification)
         Set<Subscriber> subscribers = new HashSet<>(publisherSubscriberMap.getOrDefault(publisher, Set.of()));
         for (Subscriber subscriber : subscribers) {
             EventFilter filter = subscriberFilterMap.getOrDefault(subscriber, e -> true);
             if (filter.shouldProcess(event)) {
                 subscriber.enqueue(event);
+//                logger.info("Event delivered to subscriber: " + subscriber.getName());
             }
         }
 
-        // Defensive copy of adminSubscribers set
         for (Subscriber admin : new HashSet<>(adminSubscribers)) {
             EventFilter filter = subscriberFilterMap.get(admin);
             if (filter == null || filter.shouldProcess(event)) {
                 admin.enqueue(event);
+                logger.info("Event delivered to admin: " + admin.getName());
             }
         }
-        // Log the event safely
+
         try {
             eventHistory.logEvent(event, publisher);
         } catch (Exception e) {
-            System.err.println("Failed to log event: " + e.getMessage());
-
+            logger.warning("Failed to log event: " + e.getMessage());
         }
     }
-
-
-
-
 
     public Set<Publisher> getPublishersForSubscriber(Subscriber subscriber) {
         if (subscriber == null) {
@@ -182,13 +130,9 @@ public class EventBus {
         return new HashSet<>(subscriberPublisherMap.getOrDefault(subscriber, Set.of()));
     }
 
-
     public Set<Publisher> getAllPublishers() {
         return new HashSet<>(publisherSubscriberMap.keySet());
     }
-
-
-
 
     public boolean hasSubscribers(Publisher publisher) {
         if (publisher == null) return false;
@@ -196,14 +140,20 @@ public class EventBus {
         return subs != null && !subs.isEmpty();
     }
 
-
-
-    //get all subscribers of a publisher
     public Set<Subscriber> getSubscribers(Publisher publisher) {
         if (publisher == null) return Set.of();
         return new HashSet<>(publisherSubscriberMap.getOrDefault(publisher, Set.of()));
     }
 
 
+    //publisher name with the help of publisher id
+    public String getPublisherName(String publisherId) {
+        for (Map.Entry<Publisher, Set<Subscriber>> entry : publisherSubscriberMap.entrySet()) {
+            if (entry.getKey().getId().equals(publisherId)) {
+                return entry.getKey().getName();
+            }
+        }
+        return null;
+    }
 
 }

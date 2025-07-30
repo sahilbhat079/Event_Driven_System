@@ -47,8 +47,7 @@ public class EventHistory {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (!(o instanceof EventRecord)) return false;
-            EventRecord that = (EventRecord) o;
+            if (!(o instanceof EventRecord that)) return false;
             return Objects.equals(event, that.event)
                     && Objects.equals(timestamp, that.timestamp)
                     && Objects.equals(publisherId, that.publisherId);
@@ -72,43 +71,44 @@ public class EventHistory {
     }
 
     public List<EventRecord> getEventsByType(String type) {
-        if (type == null) return List.of();
+        if (type == null || type.trim().isEmpty()) return List.of();
+        String normalizedType = type.trim().toUpperCase();
         return history.stream()
-                .filter(record -> type.equalsIgnoreCase(record.getEvent().getType().name()))
-                .collect(Collectors.toList());
+                .filter(records -> normalizedType.equals(records.getEvent().getType().name()))
+                .toList();
     }
 
     public List<EventRecord> getEventsByPublisher(String publisherId) {
         if (publisherId == null) return List.of();
         return history.stream()
-                .filter(record -> publisherId.equalsIgnoreCase(record.getPublisherId()))
-                .collect(Collectors.toList());
+                .filter(records -> publisherId.equalsIgnoreCase(records.getPublisherId()))
+                .toList();
     }
 
     public List<EventRecord> getEventsAfter(Instant timestamp) {
         if (timestamp == null) return List.of();
         return history.stream()
-                .filter(record -> record.getTimestamp().isAfter(timestamp))
-                .collect(Collectors.toList());
+                .filter(records -> records.getTimestamp().isAfter(timestamp))
+                .toList();
     }
 
     public Map<String, Long> countEventsByType() {
         return history.stream()
                 .collect(Collectors.groupingBy(
-                        record -> record.getEvent().getType().name(),
+                        records -> records.getEvent().getType().name(),
                         Collectors.counting()));
     }
 
     public void pruneBefore(Instant cutoff) {
         if (cutoff == null) return;
-        history.removeIf(record -> record.getTimestamp().isBefore(cutoff));
+        history.removeIf(records -> records.getTimestamp().isBefore(cutoff));
     }
     //  NEW: Get events from the last hour
     public List<EventRecord> getEventsInLastHour() {
         Instant oneHourAgo = Instant.now().minusSeconds(3600);
         return history.stream()
-                .filter(record -> record.getTimestamp().isAfter(oneHourAgo))
-                .collect(Collectors.toList());
+                .filter(records -> records.getTimestamp().isAfter(oneHourAgo))
+                .toList();
     }
 
 
@@ -116,8 +116,8 @@ public class EventHistory {
     public List<EventRecord> getEventsBetween(Instant start, Instant end) {
         if (start == null || end == null) return List.of();
         return history.stream()
-                .filter(record -> !record.getTimestamp().isBefore(start) && !record.getTimestamp().isAfter(end))
-                .collect(Collectors.toList());
+                .filter(records -> !records.getTimestamp().isBefore(start) && !records.getTimestamp().isAfter(end))
+                .toList();
     }
 
         public void clear() {

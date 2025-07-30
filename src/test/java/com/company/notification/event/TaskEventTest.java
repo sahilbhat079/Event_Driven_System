@@ -15,7 +15,6 @@ class TaskEventTest {
     @Test
     void shouldCreateTaskEventWithValidData() {
         TaskEvent event = new TaskEvent(validTaskName, validTaskDescription, validPublisherId, validPriority);
-
         assertEquals(validTaskName, event.getTaskName());
         assertEquals(validTaskDescription, event.getTaskDescription());
         assertEquals(validPublisherId, event.getSourcePublisherId());

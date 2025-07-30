@@ -24,6 +24,14 @@ public class HeartBeatEvent implements Event {
         this.taskDescription = (taskDescription == null || taskDescription.isBlank()) ? "Reminder Event" : taskDescription;
     }
 
+    public LocalDateTime getTimeStamp() {
+        return timeStamp;
+    }
+
+    public String getPublisherId() {
+        return publisherId;
+    }
+
     @Override
     public EventTypes getType() {
         return EventTypes.HEARTBEAT;
