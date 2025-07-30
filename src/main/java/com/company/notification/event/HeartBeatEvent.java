@@ -7,13 +7,22 @@ public class HeartBeatEvent implements Event {
     private final LocalDateTime timeStamp;
     private final String publisherId;
     private final Priority priority ;
+    private final String taskDescription;
+    private final String taskName;
 
+    // Existing default constructor
     public HeartBeatEvent(String publisherId, Priority priority) {
+        this(publisherId, priority, "Heart Beat", "Reminder Event");
+    }
+
+    // Overloaded constructor
+    public HeartBeatEvent(String publisherId, Priority priority, String taskName, String taskDescription) {
         this.timeStamp = LocalDateTime.now();
         this.publisherId = publisherId;
         this.priority = priority;
+        this.taskName = (taskName == null || taskName.isBlank()) ? "Heart Beat" : taskName;
+        this.taskDescription = (taskDescription == null || taskDescription.isBlank()) ? "Reminder Event" : taskDescription;
     }
-
 
     @Override
     public EventTypes getType() {
@@ -50,9 +59,16 @@ public class HeartBeatEvent implements Event {
     @Override
     public String toString() {
         return "HeartBeatEvent{" +
-                "timeStamp=" + timeStamp +
-                ", publisherId='" + publisherId + '\'' +
-                ", priority=" + priority +
+                "taskName='" + taskName + '\'' +
+                ", taskDescription='" + taskDescription + '\'' +
                 '}';
+    }
+
+    public String getTaskDescription() {
+        return taskDescription;
+    }
+
+    public String getTaskName() {
+        return taskName;
     }
 }

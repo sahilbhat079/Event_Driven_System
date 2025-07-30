@@ -36,7 +36,7 @@ public class ConcretePublisher implements Publisher {
 
     @Override
     public String getName() {
-        return "ConcretePublisher";
+        return name;
     }
 
     @Override

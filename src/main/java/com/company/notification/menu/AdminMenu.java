@@ -1,4 +1,169 @@
 package com.company.notification.menu;
 
+
+import com.company.notification.core.EventBus;
+import com.company.notification.core.EventHistory;
+import com.company.notification.event.Event;
+import com.company.notification.model.subscriber.Subscriber;
+
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.List;
+import java.util.Objects;
+import java.util.Scanner;
+
 public class AdminMenu {
+    private final EventBus eventBus;
+    private final Subscriber admin;
+    private final EventHistory eventHistory;
+    private final Scanner scanner = new Scanner(System.in);
+
+    public AdminMenu(EventBus eventBus, Subscriber admin, EventHistory eventHistory) {
+        this.eventBus = Objects.requireNonNull(eventBus, "EventBus must not be null");
+        this.admin = Objects.requireNonNull(admin, "Admin subscriber must not be null");
+        this.eventHistory = Objects.requireNonNull(eventHistory, "EventHistory must not be null");
+    }
+
+    public void display() {
+        while (true) {
+            System.out.println("\n==== Admin Menu ====");
+            System.out.println("1. Process Admin Queue");
+            System.out.println("2. View All Events");
+            System.out.println("3. View Events by Type");
+            System.out.println("4. View Events by Publisher");
+            System.out.println("5. View Events in Last Hour");
+            System.out.println("6. View Events Between Two Times");
+            System.out.println("7. Count Events by Type");
+            System.out.println("8. Clear Event History");
+            System.out.println("9. Exit to Main Menu");
+            System.out.print("Enter choice: ");
+
+            String choice = scanner.nextLine().trim();
+            switch (choice) {
+                case "1" -> admin.processQueue();
+                case "2" -> viewAllEvents();
+                case "3" -> viewEventsByType();
+                case "4" -> viewEventsByPublisher();
+                case "5" -> viewEventsInLastHour();
+                case "6" -> viewEventsBetween();
+                case "7" -> countEventsByType();
+                case "8" -> clearHistory();
+                case "9" -> {
+                    System.out.println("Returning to Main Menu...");
+                    return;
+                }
+                default -> System.out.println("Invalid choice. Try again.");
+            }
+        }
+    }
+
+    private void viewAllEvents() {
+        System.out.println("\nAll Events:");
+        eventHistory.getAllEvents().forEach(System.out::println);
+    }
+
+    private void viewEventsByType() {
+        System.out.println("Choose Event Type to View:");
+        System.out.println("1. TASK");
+        System.out.println("2. HEARTBEAT");
+        System.out.println("3. PRIORITY");
+        System.out.print("Enter your choice (1-3): ");
+
+        String choice = scanner.nextLine().trim();
+        String eventType;
+
+        switch (choice) {
+            case "1" -> eventType = "TASK";
+            case "2" -> eventType = "HEARTBEAT";
+            case "3" -> eventType = "PRIORITY";
+            default -> {
+                System.out.println("Invalid choice. Please select 1, 2, or 3.");
+                return;
+            }
+        }
+
+        List<EventHistory.EventRecord> filteredEvents = eventHistory.getEventsByType(eventType);
+
+        if (filteredEvents == null || filteredEvents.isEmpty()) {
+            System.out.println("No events found for type: " + eventType);
+            return;
+        }
+
+        System.out.println("Events of type " + eventType + ":");
+        filteredEvents.forEach(System.out::println);
+    }
+
+    private void viewEventsByPublisher() {
+        System.out.print("Enter publisher ID: ");
+        String pubId = scanner.nextLine().trim();
+        if (pubId.isEmpty()) {
+            System.out.println("Publisher ID cannot be empty.");
+            return;
+        }
+        eventHistory.getEventsByPublisher(pubId).forEach(System.out::println);
+    }
+
+    private void viewEventsInLastHour() {
+        System.out.println("\nEvents from Last Hour:");
+        eventHistory.getEventsInLastHour().forEach(System.out::println);
+    }
+
+    private void viewEventsBetween() {
+        try {
+            System.out.print("Enter start hour (0-23): ");
+            String startHourStr = scanner.nextLine().trim();
+            System.out.print("Enter end hour (0-23): ");
+            String endHourStr = scanner.nextLine().trim();
+
+            if (startHourStr.isEmpty() || endHourStr.isEmpty()) {
+                System.out.println("Hours cannot be empty.");
+                return;
+            }
+
+            int startHour = Integer.parseInt(startHourStr);
+            int endHour = Integer.parseInt(endHourStr);
+
+            if (startHour < 0 || endHour < 0 || endHour > 23 || startHour > endHour) {
+                System.out.println("Invalid hour range. Please enter between 0 and 23 and ensure start <= end.");
+                return;
+            }
+
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime startDateTime = now.withHour(startHour).withMinute(0).withSecond(0).withNano(0);
+            LocalDateTime endDateTime = now.withHour(endHour).withMinute(59).withSecond(59).withNano(999999999);
+
+            //creating instant from local date time cause getEventsBetween requires instant
+
+            Instant startInstant = startDateTime.atZone(ZoneId.systemDefault()).toInstant();
+            Instant endInstant = endDateTime.atZone(ZoneId.systemDefault()).toInstant();
+
+            System.out.println("\nEvents between " + startHour + ":00 and " + endHour + ":00 today:");
+            eventHistory.getEventsBetween(startInstant, endInstant)
+                    .forEach(System.out::println);
+
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid hour input. Please enter a number between 0 and 23.");
+        }
+    }
+
+
+
+
+    private void countEventsByType() {
+        System.out.println("\nEvent Counts by Type:");
+        eventHistory.countEventsByType()
+                .forEach((type, count) -> System.out.println(type + ": " + count));
+    }
+
+    private void clearHistory() {
+        System.out.print("Are you sure you want to clear all event history? (yes/no): ");
+        String input = scanner.nextLine().trim();
+        if (input.equalsIgnoreCase("yes")) {
+            eventHistory.clear();
+            System.out.println("Event history cleared.");
+        } else {
+            System.out.println("Clear operation aborted.");
+        }
+    }
 }

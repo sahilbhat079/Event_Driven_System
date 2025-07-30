@@ -27,13 +27,9 @@ public class AdminSubscriber extends BaseSubscriber implements Subscriber {
             System.out.println("Admin: " + name + "] Null event ignored.");
             return;
         }
+    if (eventFilter.shouldProcess(event))
+        queue.offer(event);
 
-        if (eventFilter.shouldProcess(event)) {
-            queue.offer(event);
-            System.out.println("Admin: " + name + "] Event added to queue: " + event);
-        } else {
-            System.out.println("Admin: " + name + "] Event filtered out: " + event);
-        }
     }
 
     @Override

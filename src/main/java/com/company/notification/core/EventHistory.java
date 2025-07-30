@@ -64,7 +64,7 @@ public class EventHistory {
         if (event == null || publisher == null) {
             throw new IllegalArgumentException("Event and Publisher cannot be null");
         }
-        history.add(new EventRecord(event, publisher.getId().toString()));
+        history.add(new EventRecord(event, publisher.getId()));
     }
 
     public List<EventRecord> getAllEvents() {

@@ -23,7 +23,7 @@ public class EventBus {
     // Set of admin subscribers who receive all events
     private final Set<Subscriber> adminSubscribers = ConcurrentHashMap.newKeySet();
 
-    private final Subscriber dummyAdmin;
+    private final AdminSubscriber dummyAdmin;
     private final EventHistory eventHistory ;
 
 
@@ -36,7 +36,7 @@ public class EventBus {
         System.out.println(" SystemAdmin (default admin) registered.");
     }
 
-    public Subscriber getDummyAdmin() {
+    public AdminSubscriber getDummyAdmin() {
         return dummyAdmin;
     }
 
@@ -162,11 +162,47 @@ public class EventBus {
                 admin.enqueue(event);
             }
         }
+        // Log the event safely
+        try {
+            eventHistory.logEvent(event, publisher);
+        } catch (Exception e) {
+            System.err.println("Failed to log event: " + e.getMessage());
 
-        // Log the event
-        eventHistory.logEvent(event,publisher);
+        }
     }
 
+
+
+
+
+    public Set<Publisher> getPublishersForSubscriber(Subscriber subscriber) {
+        if (subscriber == null) {
+            throw new IllegalArgumentException("Subscriber cannot be null");
+        }
+        return new HashSet<>(subscriberPublisherMap.getOrDefault(subscriber, Set.of()));
+    }
+
+
+    public Set<Publisher> getAllPublishers() {
+        return new HashSet<>(publisherSubscriberMap.keySet());
+    }
+
+
+
+
+    public boolean hasSubscribers(Publisher publisher) {
+        if (publisher == null) return false;
+        Set<Subscriber> subs = publisherSubscriberMap.get(publisher);
+        return subs != null && !subs.isEmpty();
+    }
+
+
+
+    //get all subscribers of a publisher
+    public Set<Subscriber> getSubscribers(Publisher publisher) {
+        if (publisher == null) return Set.of();
+        return new HashSet<>(publisherSubscriberMap.getOrDefault(publisher, Set.of()));
+    }
 
 
 

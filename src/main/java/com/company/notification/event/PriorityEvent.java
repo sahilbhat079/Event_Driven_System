@@ -7,16 +7,16 @@ public class PriorityEvent implements Event {
     private final String taskName;
     private final Priority priority;
     private final LocalDateTime timeStamp;
-    private final String message;
+    private final String taskDescription;
     private final String sourcePublisherId;
 
-    public PriorityEvent(String taskName, Priority priority, String message, String sourcePublisherId) {
+    public PriorityEvent(String taskName, Priority priority, String taskDescription, String sourcePublisherId) {
         this.taskName = taskName;
         // null check
         if (priority == null) {
             throw new IllegalArgumentException("Priority cannot be null");
         }
-        if (message == null || message.isEmpty()) {
+        if (taskDescription == null || taskDescription.isEmpty()) {
             throw new IllegalArgumentException("Message cannot be null or empty");
         }
         if (sourcePublisherId == null || sourcePublisherId.isEmpty()) {
@@ -24,7 +24,7 @@ public class PriorityEvent implements Event {
         }
         this.priority = priority;
         this.timeStamp = LocalDateTime.now();
-        this.message = message;
+        this.taskDescription = taskDescription;
         this.sourcePublisherId = sourcePublisherId;
     }
 
@@ -36,9 +36,7 @@ public class PriorityEvent implements Event {
         return timeStamp;
     }
 
-    public String getMessage() {
-        return message;
-    }
+
 
     @Override
     public EventTypes getType() {
@@ -58,12 +56,12 @@ public class PriorityEvent implements Event {
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof PriorityEvent that)) return false;
-        return priority == that.priority && Objects.equals(timeStamp, that.timeStamp) && Objects.equals(message, that.message);
+        return priority == that.priority && Objects.equals(timeStamp, that.timeStamp) && Objects.equals(taskDescription, that.taskDescription);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(priority, timeStamp, message);
+        return Objects.hash(priority, timeStamp, taskDescription);
     }
 
 
@@ -71,7 +69,10 @@ public class PriorityEvent implements Event {
     public String toString() {
         return  "PriorityEvent{" +
                 "taskName='" + taskName + '\'' +
-                ", priority=" + priority +
-                ", message='" + message + '\'' ;
+                ", message='" + taskDescription + '\'' ;
+    }
+
+    public String getTaskDescription() {
+        return taskDescription;
     }
 }

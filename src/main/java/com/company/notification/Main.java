@@ -3,141 +3,105 @@ package com.company.notification;
 import com.company.notification.core.EventBus;
 import com.company.notification.core.EventHistory;
 import com.company.notification.core.SchedulerManager;
-import com.company.notification.event.Priority;
-import com.company.notification.event.PriorityEvent;
-import com.company.notification.event.TaskEvent;
-import com.company.notification.filters.AlwaysTrueFilter;
-import com.company.notification.filters.PriorityFilter;
-import com.company.notification.filters.TimeWindowFilter;
+import com.company.notification.menu.AdminMenu;
+import com.company.notification.menu.PublisherMenu;
+import com.company.notification.menu.SubscriberMenu;
 import com.company.notification.model.publisher.ConcretePublisher;
 import com.company.notification.model.publisher.Publisher;
 import com.company.notification.model.subscriber.AdminSubscriber;
 import com.company.notification.model.subscriber.Subscriber;
 import com.company.notification.model.subscriber.UserSubscriber;
-import java.time.LocalTime;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
 public class Main {
         private static final Logger logger =  LoggerFactory.getLogger(Main.class);
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) {
 
-    logger.info("Starting notification system...");
+        logger.info("Starting notification system...");
+        System.out.println("Starting Notification System...");
 
-        // 1. Core setup
+        Map<String, Publisher> publisherMap = new HashMap<>();
+        Map<String, Subscriber> subscriberMap = new HashMap<>();
+        Map<String, AdminSubscriber> adminMap = new HashMap<>();
+
+
+
+        Scanner scanner = new Scanner(System.in);
         EventHistory eventHistory = new EventHistory();
         EventBus eventBus = new EventBus(eventHistory);
         SchedulerManager schedulerManager = new SchedulerManager(eventBus);
-        Publisher publisher = new ConcretePublisher("SystemPublisher");
-        eventBus.registerPublisher(publisher);
-
-        // 2. Filters
-        PriorityFilter highPriorityFilter = new PriorityFilter(Priority.HIGH);
-        PriorityFilter lowPriorityFilter = new PriorityFilter(Priority.LOW);
-        AlwaysTrueFilter alwaysTrueFilter = new AlwaysTrueFilter();
-
-        LocalTime now = LocalTime.now();
-        TimeWindowFilter timeWindowFilter = new TimeWindowFilter(now.minusSeconds(5), now.plusSeconds(10));
-
-        // 3. Subscribers
-        Subscriber highUser = new UserSubscriber("Alice-HIGH", highPriorityFilter);
-        Subscriber lowUser = new UserSubscriber("Charlie-LOW", lowPriorityFilter);
-        Subscriber timeWindowUser = new UserSubscriber("Time-Window", timeWindowFilter);
-        Subscriber admin = new AdminSubscriber("Admin", alwaysTrueFilter);
-        eventBus.registerAdminSubscriber(admin, alwaysTrueFilter);
 
 
-        // 4. Subscriptions
-        eventBus.subscribe(highUser, publisher, highUser.getFilter());
-        eventBus.subscribe(lowUser, publisher, lowUser.getFilter());
-        eventBus.subscribe(timeWindowUser, publisher, timeWindowUser.getFilter());
+        //upon initialization, register dummy admin
+        AdminSubscriber dummyAdmin = eventBus.getDummyAdmin();
+        adminMap.put(dummyAdmin.getName(), dummyAdmin);
 
+        while (true) {
+            System.out.println("\n=== Notification System Login ===");
+            System.out.println("1. Login as Publisher");
+            System.out.println("2. Login as Subscriber");
+            System.out.println("3. Login as Admin");
+            System.out.println("4. Exit");
+            System.out.print("Select option: ");
+            String choice = scanner.nextLine().trim();
 
+            switch (choice) {
+                case "1" -> {
+                    System.out.print("Enter publisher name: ");
+                    String name = scanner.nextLine().trim();
+                    if (name.isEmpty()) {
+                        System.out.println("Publisher name cannot be empty.");
+                        break;
+                    }
+                    Publisher publisher = publisherMap.computeIfAbsent(name, n -> {
+                        Publisher p = new ConcretePublisher(n);
+                        eventBus.registerPublisher(p);
+                        return p;
+                    });
+                    new PublisherMenu(eventBus, publisher, schedulerManager, scanner).show();
+                }
+                case "2" -> {
+                    System.out.print("Enter subscriber name: ");
+                    String name = scanner.nextLine().trim();
+                    if (name.isEmpty()) {
+                        System.out.println("Subscriber name cannot be empty.");
+                        break;
+                    }
+                    Subscriber subscriber = subscriberMap.computeIfAbsent(name, n -> new UserSubscriber(n, event -> true));
+                    new SubscriberMenu(eventBus, subscriber, scanner).display();
+                }
 
-        // 5. Scheduler (heartbeat)
-        schedulerManager.registerScheduler(publisher, 2); // Every 2 seconds
+            case "3" -> {
+                    System.out.print("Enter admin name: ");
+                    String name = scanner.nextLine().trim();
+                    if (name.isEmpty()) {
+                        System.out.println("Admin name cannot be empty.");
+                        break;
+                    }
+                    AdminSubscriber admin = adminMap.computeIfAbsent(name, n -> {
+                        AdminSubscriber a = new AdminSubscriber(n, event -> true);
+                        eventBus.registerAdminSubscriber(a, a.getFilter());
+                        return a;
+                    });
+                    new AdminMenu(eventBus, admin, eventHistory).display();
+                }
+                case "4" -> {
+                    schedulerManager.shutdownAllSchedulers();
+                    System.out.println("Exiting system. Goodbye.");
+                    return;
+                }
+                default -> System.out.println("Invalid option. Please try again.");
+            }
+        }
 
-        // 6. Publish task events
-        sendTaskEvent(eventBus, publisher, "Critical Fix", "Memory bug", Priority.HIGH);
-        Thread.sleep(500);
-        sendTaskEvent(eventBus, publisher, "UI Update", "Dark mode", Priority.LOW);
-        Thread.sleep(500);
-        sendTaskEvent(eventBus, publisher, "Retry Setup", "Resend payment", Priority.MEDIUM);
-        Thread.sleep(500);
-
-        // 7. Publish a PriorityEvent
-        PriorityEvent pEvent = new PriorityEvent("System Alert", Priority.HIGH, "Database down", publisher.getId());
-        System.out.println("➡ Publishing PriorityEvent: " + pEvent.getMessage());
-//        publisher.publish(publisher,pEvent);
-        publisher.publish(eventBus, pEvent);
-
-        // Wait to allow heartbeat events
-        Thread.sleep(6000);
-
-        // 8. Process all queues
-        System.out.println("\n Processing queues...");
-        highUser.processQueue();
-        lowUser.processQueue();
-        timeWindowUser.processQueue();
-        admin.processQueue();
-
-        eventHistory.getAllEvents().forEach(System.out::println);  // ✅ Print all events
-        eventHistory.countEventsByType().forEach((type, count) ->   // ✅ Group & count
-                System.out.println(type + ": " + count));
-
-
-
-        // 9. Shutdown
-        schedulerManager.shutdownAllSchedulers();
-        System.out.println("\n All schedulers stopped. Test complete.");
     }
-
-    private static void sendTaskEvent(EventBus eventBus, Publisher publisher, String name, String desc, Priority priority) {
-        TaskEvent event = new TaskEvent(name, desc, publisher.getId(), priority);
-        System.out.println("➡ Publishing TaskEvent: " + name + " [Priority: " + priority + "]");
-        eventBus.publishFromPublisher(publisher, event);
-    }
-//    public static void  test() throws RuntimeException {
-//        System.out.println("🔔 Starting Event-Driven Notification System...");
-//
-//        // 1. Core Setup
-//        EventBus eventBus = new EventBus(eventHistory);
-//        SchedulerManager schedulerManager = new SchedulerManager(eventBus);
-//
-//        Publisher publisher = new ConcretePublisher("SystemPublisher");
-//        eventBus.registerPublisher(publisher);
-//
-//        // 2. Admin Setup (receives all events including heartbeat)
-//        EventFilter allowAll = event -> true;
-//        Subscriber admin = new AdminSubscriber("SuperAdmin", allowAll);
-//        eventBus.registerAdminSubscriber(admin, allowAll);
-//
-//        // 3. Start Scheduler (heartbeat every 2 seconds)
-//        schedulerManager.registerScheduler(publisher, 2); // 2 seconds
-//
-//        // 4. Let the system run for a while and process periodically
-//        int runtimeSeconds = 20; // run for 20 seconds
-//        for (int i = 1; i <= runtimeSeconds; i++) {
-//            try {
-//                Thread.sleep(1000);
-//            } catch (InterruptedException e) {
-//                //reintroduce the interrupted exception
-//                Thread.currentThread().interrupt();
-//                throw new RuntimeException(e);
-//            }
-//            if (i % 5 == 0) {
-//                System.out.println("\nTime: " + i + " seconds elapsed. Processing admin queue...");
-//                admin.processQueue();
-//            }
-//        }
-//
-//
-//        // 5. Shutdown
-//        System.out.println("\nStopping all schedulers...");
-//        schedulerManager.shutdownAllSchedulers();
-//        System.out.println(" System terminated.");
-//    }
 
 
 

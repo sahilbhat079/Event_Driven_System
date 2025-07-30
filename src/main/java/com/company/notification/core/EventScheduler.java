@@ -4,17 +4,17 @@ import com.company.notification.event.HeartBeatEvent;
 import com.company.notification.event.Priority;
 import com.company.notification.model.publisher.Publisher;
 
-import java.time.LocalDateTime;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 public class EventScheduler {
 private final EventBus eventBus ;
 private final Publisher publisher;
 private final long intervalSeconds;
 private ScheduledExecutorService scheduler;
-
+    private static final Logger logger = Logger.getLogger(EventScheduler.class.getName());
 
     public EventScheduler(EventBus eventBus, Publisher publisher, long intervalSeconds) {
       //  null check
@@ -43,6 +43,12 @@ private ScheduledExecutorService scheduler;
      * prevent the JVM from exiting.
      */
     public void start() {
+
+        if (scheduler != null && !scheduler.isShutdown()) {
+            logger.info("Scheduler already started for " + publisher.getName());
+            return;
+        }
+
         scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r);
             t.setDaemon(true);
@@ -51,19 +57,25 @@ private ScheduledExecutorService scheduler;
         });
 
         scheduler.scheduleAtFixedRate(() -> {
+            if (!eventBus.hasSubscribers(publisher)) {
+                logger.warning("No subscribers remaining. Shutting down scheduler for " + publisher.getName());
+                shutdown();
+                return;
+            }
 
             HeartBeatEvent heartBeatEvent = new HeartBeatEvent(publisher.getId(), Priority.MEDIUM);
-            System.out.println("🕒 [" + Thread.currentThread().getName() + "] Heartbeat #" +
-                    " from " + publisher.getName() + " at " + LocalDateTime.now());
             eventBus.publishFromPublisher(publisher, heartBeatEvent);
+
         }, 0, intervalSeconds, TimeUnit.SECONDS);
+//        logger.info("Heartbeat scheduler started for publisher: " + publisher.getName());
+
     }
 
 
     public  void shutdown() {
         if (scheduler != null && !scheduler.isShutdown()) {
             scheduler.shutdownNow();
-            System.out.println("Scheduler shutdown for " + publisher.getName());
+            logger.info("Scheduler shutdown for " + publisher.getName());
         }
 
 
@@ -71,5 +83,10 @@ private ScheduledExecutorService scheduler;
 
     }
 
+
+
+    public boolean isShutdown() {
+        return scheduler == null || scheduler.isShutdown();
+    }
 
 }

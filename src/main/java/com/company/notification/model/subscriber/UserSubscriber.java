@@ -25,29 +25,40 @@ public class UserSubscriber extends BaseSubscriber implements Subscriber{
             return;
         }
 
-        if (eventFilter == null || eventFilter.shouldProcess(event)) {
+        if (eventFilter == null || eventFilter.shouldProcess(event))
             queue.offer(event);
-            System.out.println(" [" + name + "] Queued event: " + event);
-        } else {
-            System.out.println(" [" + name + "] Event filtered out: " + event);
-        }
     }
 
     @Override
     public void processQueue() {
         if (queue.isEmpty()) {
-            System.out.println(" [" + name + "] No events to process.");
+            System.out.println("\u001B[33m[" + name + "] No events to process.\u001B[0m");
             return;
         }
 
-        System.out.println(" [" + name + "] Processing events (Priority-based):");
+        System.out.println("\u001B[34m[" + name + "] Processing events (Priority-based):\u001B[0m");
 
         while (!queue.isEmpty()) {
-            Event event = queue.poll(); // automatically gives highest priority first
-            System.out.println("    " + event);
+            Event event = queue.poll();
+            if (event instanceof com.company.notification.event.TaskEvent taskEvent) {
+                System.out.println("\u001B[36m[Task Event]\u001B[0m");
+                System.out.println("\u001B[36m  Task Name: \u001B[0m" + taskEvent.getTaskName());
+                System.out.println("\u001B[36m  Description: \u001B[0m" + taskEvent.getTaskDescription());
+
+            } else if (event instanceof com.company.notification.event.PriorityEvent priorityEvent) {
+                System.out.println("\u001B[33m[Priority Event]\u001B[0m");
+                System.out.println("\u001B[33m  Priority Level: \u001B[0m" + priorityEvent.getPriority());
+
+            } else if (event instanceof com.company.notification.event.HeartBeatEvent) {
+                System.out.println("\u001B[35m[Heartbeat Event]\u001B[0m");
+                System.out.println("\u001B[35m  Sending periodic heartbeat...\u001B[0m");
+
+            } else {
+                System.out.println("\u001B[90m[Unknown Event] \u001B[0m" + event);
+            }
         }
 
-        System.out.println("[" + name + "] All events processed.\n");
+        System.out.println("\u001B[32m[" + name + "] All events processed.\u001B[0m\n");
     }
 
     @Override
