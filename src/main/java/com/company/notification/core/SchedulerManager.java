@@ -58,6 +58,9 @@ public class SchedulerManager {
 
 
 
+
+
+
     public void removeScheduler(Publisher publisher) {
         EventScheduler scheduler = schedulerMap.remove(publisher);
         if (scheduler != null) {
@@ -70,6 +73,7 @@ public class SchedulerManager {
     public boolean hasScheduler(Publisher publisher) {
         return schedulerMap.containsKey(publisher);
     }
+
 
 
 

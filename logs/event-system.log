@@ -95,3 +95,23 @@
 2025-07-31 11:33:50 [main] INFO  c.c.notification.menu.PublisherMenu - Exiting Publisher Menu for publisher: sahil
 2025-07-31 11:34:31 [main] INFO  c.c.notification.menu.PublisherMenu - Started reminder scheduler for publisher: sahil with interval: 3s
 2025-07-31 11:34:32 [main] INFO  c.c.notification.menu.PublisherMenu - Exiting Publisher Menu for publisher: sahil
+2025-07-31 11:43:52 [main] INFO  com.company.notification.Main - Starting notification system...
+2025-07-31 11:44:01 [main] INFO  c.c.notification.menu.PublisherMenu - Exiting Publisher Menu for publisher: sahil
+2025-07-31 11:44:35 [main] INFO  c.c.notification.menu.PublisherMenu - Started reminder scheduler for publisher: sahil with interval: 3s
+2025-07-31 11:44:37 [main] INFO  c.c.notification.menu.PublisherMenu - Exiting Publisher Menu for publisher: sahil
+2025-07-31 11:46:33 [main] INFO  c.c.notification.menu.PublisherMenu - Stopped reminder scheduler for publisher: sahil
+2025-07-31 11:46:41 [main] INFO  c.c.notification.menu.PublisherMenu - Started reminder scheduler for publisher: sahil with interval: 15s
+2025-07-31 11:46:45 [main] INFO  c.c.notification.menu.PublisherMenu - Started reminder scheduler for publisher: sahil with interval: 15s
+2025-07-31 11:47:12 [main] INFO  c.c.notification.menu.PublisherMenu - Exiting Publisher Menu for publisher: sahil
+2025-07-31 12:20:20 [main] INFO  com.company.notification.Main - Starting notification system...
+2025-07-31 12:20:27 [main] INFO  c.c.notification.menu.PublisherMenu - Exiting Publisher Menu for publisher: sahil
+2025-07-31 12:20:55 [main] INFO  c.c.notification.menu.PublisherMenu - Exiting Publisher Menu for publisher: 2
+2025-07-31 12:21:56 [main] INFO  c.c.notification.menu.PublisherMenu - Started reminder scheduler for publisher: sahil with interval: 10s
+2025-07-31 12:22:04 [main] INFO  c.c.notification.menu.PublisherMenu - Exiting Publisher Menu for publisher: sahil
+2025-07-31 12:31:23 [main] INFO  com.company.notification.Main - Starting notification system...
+2025-07-31 12:31:33 [main] INFO  c.c.notification.menu.PublisherMenu - Exiting Publisher Menu for publisher: sahil
+2025-07-31 12:32:39 [main] INFO  c.c.notification.menu.PublisherMenu - Started reminder scheduler for publisher: sahil with interval: 5s
+2025-07-31 12:33:22 [main] INFO  c.c.notification.menu.PublisherMenu - Exiting Publisher Menu for publisher: sahil
+2025-07-31 13:23:00 [main] INFO  com.company.notification.Main - Starting notification system...
+2025-07-31 13:23:51 [main] INFO  c.c.notification.menu.PublisherMenu - Published LOW priority task event from publisher: sahil
+2025-07-31 13:23:54 [main] INFO  c.c.notification.menu.PublisherMenu - Exiting Publisher Menu for publisher: sahil

@@ -113,6 +113,14 @@ public class PublisherMenu {
             return;
         }
 
+//        alsoCheck if scheduler is already running then won't start again
+//        we can have multiple schedulers if we use map publisher and scheduler map with multiple schedulers
+        //associate publisher with scheduler
+        if(schedulerManager.hasScheduler(publisher)) {
+            logger.info("Scheduler already exists for publisher: {}", publisher.getName());
+            return;
+        }
+
         System.out.print("Enter reminder interval (seconds): ");
         try {
             String input = scanner.nextLine();

@@ -33,15 +33,6 @@ private ScheduledExecutorService scheduler;
     }
 
 
-
-/* <<<<<<<<<<<<<<  ✨ Windsurf Command ⭐ >>>>>>>>>>>>>>>> */
-    /**
-     * Start the heartbeat scheduler.
-     * <p>
-     * This method will schedule a single-threaded executor to send heartbeats to the
-     * event bus at the specified interval. The executor will be daemonize and will not
-     * prevent the JVM from exiting.
-     */
     public void start() {
 
         if (scheduler != null && !scheduler.isShutdown()) {

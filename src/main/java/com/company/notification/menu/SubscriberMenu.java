@@ -12,6 +12,7 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
+import java.util.Set;
 
 public class SubscriberMenu {
     private final EventBus eventBus;
@@ -105,33 +106,28 @@ public class SubscriberMenu {
     }
 
     private void changeFilter() {
-        List<Publisher> subscriptions = eventBus.getPublishersForSubscriber(subscriber).stream().toList();
+        if (subscriber == null || eventBus == null) {
+            System.out.println("Subscriber or event system is not initialized.");
+            return;
+        }
 
-        if (subscriptions.isEmpty()) {
+        Set<Publisher> subscriptions = eventBus.getPublishersForSubscriber(subscriber);
+
+        if (subscriptions == null || subscriptions.isEmpty()) {
             System.out.println("You are not subscribed to any publishers.");
             return;
         }
 
-        System.out.println("Change filter for which subscription?");
-        for (int i = 0; i < subscriptions.size(); i++) {
-            System.out.println((i + 1) + ". " + subscriptions.get(i).getName());
-        }
+        System.out.println("Updating your event filter. Note: this applies to all subscriptions.");
+        EventFilter newFilter = getFilterFromUser();
 
-        System.out.print("Enter publisher number: ");
-        int idx = readIntInput() - 1;
-
-        if (idx < 0 || idx >= subscriptions.size()) {
-            System.out.println("Invalid selection.");
+        if (newFilter == null) {
+            System.out.println("Invalid filter input. Update cancelled.");
             return;
         }
 
-        Publisher publisher = subscriptions.get(idx);
-
-
-        EventFilter newFilter = getFilterFromUser();
         eventBus.updateFilter(subscriber, newFilter);
-        System.out.println("Filter updated for " + publisher.getName());
-
+        System.out.println("Filter updated successfully for all your subscriptions.");
     }
 
     private EventFilter getFilterFromUser() {

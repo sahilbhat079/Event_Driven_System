@@ -4,9 +4,9 @@ import com.company.notification.core.EventBus;
 import com.company.notification.core.EventHistory;
 import com.company.notification.model.subscriber.Subscriber;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 
 public class AdminMenu {
@@ -123,27 +123,30 @@ public class AdminMenu {
 
     private void viewEventsBetween() {
         try {
-            System.out.print("Enter start hour (0-23): ");
-            String startHourStr = scanner.nextLine().trim();
-            System.out.print("Enter end hour (0-23): ");
-            String endHourStr = scanner.nextLine().trim();
+            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
-            if (startHourStr.isEmpty() || endHourStr.isEmpty()) {
-                System.out.println("Hours cannot be empty.");
+            System.out.print("Enter start time (HH:mm): ");
+            String startInput = scanner.nextLine().trim();
+
+            System.out.print("Enter end time (HH:mm): ");
+            String endInput = scanner.nextLine().trim();
+
+            if (startInput.isEmpty() || endInput.isEmpty()) {
+                System.out.println("Time inputs cannot be empty.");
                 return;
             }
 
-            int startHour = Integer.parseInt(startHourStr);
-            int endHour = Integer.parseInt(endHourStr);
+            LocalTime startTime = LocalTime.parse(startInput, timeFormatter);
+            LocalTime endTime = LocalTime.parse(endInput, timeFormatter);
 
-            if (startHour < 0 || endHour > 23 || startHour > endHour) {
-                System.out.println("Invalid hour range. Please enter between 0 and 23 and ensure start <= end.");
+            if (startTime.isAfter(endTime)) {
+                System.out.println("Start time must be before or equal to end time.");
                 return;
             }
 
-            LocalDateTime now = LocalDateTime.now();
-            LocalDateTime startDateTime = now.withHour(startHour).withMinute(0).withSecond(0).withNano(0);
-            LocalDateTime endDateTime = now.withHour(endHour).withMinute(59).withSecond(59).withNano(999_999_999);
+            LocalDate today = LocalDate.now();
+            LocalDateTime startDateTime = LocalDateTime.of(today, startTime);
+            LocalDateTime endDateTime = LocalDateTime.of(today, endTime);
 
             Instant startInstant = startDateTime.atZone(ZoneId.systemDefault()).toInstant();
             Instant endInstant = endDateTime.atZone(ZoneId.systemDefault()).toInstant();
@@ -152,14 +155,14 @@ public class AdminMenu {
                     .filter(list -> !list.isEmpty())
                     .ifPresentOrElse(
                             list -> {
-                                System.out.println("\nEvents between " + startHour + ":00 and " + endHour + ":00 today:");
+                                System.out.println("\nEvents between " + startInput + " and " + endInput + " today:");
                                 list.forEach(System.out::println);
                             },
                             () -> System.out.println("No events found in the selected time range.")
                     );
 
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid hour input. Please enter a number between 0 and 23.");
+        } catch (DateTimeParseException e) {
+            System.out.println("Invalid format. Please enter time in HH:mm format (e.g., 09:00 or 17:30).");
         }
     }
 

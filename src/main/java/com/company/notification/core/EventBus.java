@@ -8,6 +8,7 @@ import com.company.notification.model.subscriber.Subscriber;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
 
 public class EventBus {
@@ -16,7 +17,7 @@ public class EventBus {
 
     private final Map<Publisher, Set<Subscriber>> publisherSubscriberMap = new ConcurrentHashMap<>();
     private final Map<Subscriber, Set<Publisher>> subscriberPublisherMap = new ConcurrentHashMap<>();
-    private final Map<Subscriber, EventFilter> subscriberFilterMap = new ConcurrentHashMap<>();
+    private final Map<Subscriber, AtomicReference<EventFilter>> subscriberFilterMap = new ConcurrentHashMap<>();
     private final Set<Subscriber> adminSubscribers = ConcurrentHashMap.newKeySet();
 
     private final AdminSubscriber dummyAdmin;
@@ -24,9 +25,9 @@ public class EventBus {
 
     public EventBus(EventHistory eventHistory) {
         this.eventHistory = eventHistory;
-        dummyAdmin = new AdminSubscriber("DummyAdmin", event -> true); // Accept all events
+        this.dummyAdmin = new AdminSubscriber("DummyAdmin", event -> true); // Accept all events
         adminSubscribers.add(dummyAdmin);
-        subscriberFilterMap.put(dummyAdmin, dummyAdmin.getFilter());
+        subscriberFilterMap.put(dummyAdmin, new AtomicReference<>(dummyAdmin.getFilter()));
         logger.info("SystemAdmin (DummyAdmin) registered.");
     }
 
@@ -35,26 +36,22 @@ public class EventBus {
     }
 
     public void registerPublisher(Publisher publisher) {
-        if (publisher == null) {
-            throw new IllegalArgumentException("Publisher cannot be null");
-        }
+        if (publisher == null) throw new IllegalArgumentException("Publisher cannot be null");
         publisherSubscriberMap.putIfAbsent(publisher, ConcurrentHashMap.newKeySet());
         logger.info("Publisher registered: " + publisher.getName());
     }
 
     public void registerAdminSubscriber(Subscriber admin, EventFilter filter) {
-        if (admin == null || filter == null) {
+        if (admin == null || filter == null)
             throw new IllegalArgumentException("Admin subscriber or filter cannot be null");
-        }
         adminSubscribers.add(admin);
-        subscriberFilterMap.put(admin, filter);
+        subscriberFilterMap.put(admin, new AtomicReference<>(filter));
         logger.info("Admin subscriber registered: " + admin.getName());
     }
 
     public void subscribe(Subscriber subscriber, Publisher publisher, EventFilter filter) {
-        if (subscriber == null || publisher == null || filter == null) {
+        if (subscriber == null || publisher == null || filter == null)
             throw new IllegalArgumentException("Subscriber, Publisher, or Filter cannot be null");
-        }
 
         publisherSubscriberMap
                 .computeIfAbsent(publisher, k -> ConcurrentHashMap.newKeySet())
@@ -64,31 +61,19 @@ public class EventBus {
                 .computeIfAbsent(subscriber, k -> ConcurrentHashMap.newKeySet())
                 .add(publisher);
 
-        subscriberFilterMap.putIfAbsent(subscriber, filter);
+        subscriberFilterMap.putIfAbsent(subscriber, new AtomicReference<>(filter));
 
         logger.info(subscriber.getName() + " subscribed to " + publisher.getName());
     }
 
     public void unsubscribe(Subscriber subscriber, Publisher publisher) {
-        if (subscriber == null || publisher == null) {
+        if (subscriber == null || publisher == null)
             throw new IllegalArgumentException("Subscriber or Publisher cannot be null");
-        }
 
-
-//        Set<Subscriber> subscribers = publisherSubscriberMap.get(publisher);
-//        if (subscribers != null) {
-//            subscribers.remove(subscriber);
-//        }
-
-        // Use computeIfPresent for atomic update
         publisherSubscriberMap.computeIfPresent(publisher, (pub, subs) -> {
             subs.remove(subscriber);
             return subs.isEmpty() ? null : subs;
         });
-
-
-
-
 
         subscriberPublisherMap.computeIfPresent(subscriber, (sub, pubs) -> {
             pubs.remove(publisher);
@@ -104,32 +89,31 @@ public class EventBus {
     }
 
     public void publishFromPublisher(Publisher publisher, Event event) {
-        if (publisher == null) {
-            throw new IllegalArgumentException("Publisher cannot be null");
-        }
-        if (event == null) {
-            throw new IllegalArgumentException("Event cannot be null");
-        }
+        if (publisher == null) throw new IllegalArgumentException("Publisher cannot be null");
+        if (event == null) throw new IllegalArgumentException("Event cannot be null");
 
+        // Deliver to regular subscribers
         Set<Subscriber> subscribers = new HashSet<>(publisherSubscriberMap.getOrDefault(publisher, Set.of()));
-
         for (Subscriber subscriber : subscribers) {
-            EventFilter filter = subscriberFilterMap.getOrDefault(subscriber, e -> true);
-            if (filter.shouldProcess(event)) {
+            EventFilter filter = Optional.ofNullable(subscriberFilterMap.get(subscriber))
+                    .map(AtomicReference::get)
+                    .orElse(null);
+            if (filter != null && filter.shouldProcess(event)) {
                 subscriber.enqueue(event);
-//                logger.info("Event delivered to subscriber: " + subscriber.getName());
             }
-
         }
 
+        // Deliver to admins
         for (Subscriber admin : new HashSet<>(adminSubscribers)) {
-            EventFilter filter = subscriberFilterMap.get(admin);
+            EventFilter filter = Optional.ofNullable(subscriberFilterMap.get(admin))
+                    .map(AtomicReference::get)
+                    .orElse(null);
             if (filter == null || filter.shouldProcess(event)) {
                 admin.enqueue(event);
-//                logger.info("Event delivered to admin: " + admin.getName());
             }
         }
 
+        // Log the event
         try {
             eventHistory.logEvent(event, publisher);
         } catch (Exception e) {
@@ -138,16 +122,13 @@ public class EventBus {
     }
 
     public Set<Publisher> getPublishersForSubscriber(Subscriber subscriber) {
-        if (subscriber == null) {
-            throw new IllegalArgumentException("Subscriber cannot be null");
-        }
+        if (subscriber == null) throw new IllegalArgumentException("Subscriber cannot be null");
         return new HashSet<>(subscriberPublisherMap.getOrDefault(subscriber, Set.of()));
     }
 
     public Set<Publisher> getAllPublishers() {
         return new HashSet<>(publisherSubscriberMap.keySet());
     }
-
 
     public boolean hasSubscribers(Publisher publisher) {
         if (publisher == null) return false;
@@ -161,24 +142,29 @@ public class EventBus {
         return new HashSet<>(publisherSubscriberMap.getOrDefault(publisher, Set.of()));
     }
 
-
     public Optional<String> getPublisherName(String publisherId) {
         if (publisherId == null || publisherId.isBlank()) return Optional.empty();
-
         return publisherSubscriberMap.keySet().stream()
                 .filter(p -> publisherId.equals(p.getId()))
                 .map(Publisher::getName)
                 .findFirst();
     }
 
-
     public void updateFilter(Subscriber subscriber, EventFilter newFilter) {
-        if (subscriber == null || newFilter == null) {
-            throw new IllegalArgumentException("Subscriber and Filter cannot be null");
+        if (subscriber == null) {
+            throw new IllegalArgumentException("Subscriber cannot be null");
+        }
+        if (newFilter == null) {
+            throw new IllegalArgumentException("EventFilter cannot be null");
         }
 
-        subscriberFilterMap.put(subscriber, newFilter);
-        logger.info("Filter updated for subscriber: " + subscriber.getName());
+        subscriberFilterMap.compute(subscriber, (key, existingRef) -> {
+            if (existingRef == null) {
+                return new AtomicReference<>(newFilter);
+            } else {
+                existingRef.set(newFilter);
+                return existingRef;
+            }
+        });
     }
-
 }
