@@ -100,6 +100,7 @@ public class EventBus {
                     .orElse(null);
             if (filter != null && filter.shouldProcess(event)) {
                 subscriber.enqueue(event);
+                logger.info(subscriber.getName() + " received event: " + event);
             }
         }
 
@@ -113,7 +114,7 @@ public class EventBus {
             }
         }
 
-        // Log the event
+
         try {
             eventHistory.logEvent(event, publisher);
         } catch (Exception e) {

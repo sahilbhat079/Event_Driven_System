@@ -27,6 +27,9 @@ public class UserSubscriber extends BaseSubscriber implements Subscriber{
 
         if (eventFilter == null || eventFilter.shouldProcess(event))
             queue.offer(event);
+
+        //log who sent the event
+
     }
 
 
