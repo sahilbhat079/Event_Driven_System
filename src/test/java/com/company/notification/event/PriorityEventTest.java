@@ -24,12 +24,18 @@ class PriorityEventTest {
     }
 
     @Test
-    void equalsAndHashCodeTest() {
+    void equalsAndHashCodeTest() throws InterruptedException {
         PriorityEvent event1 = new PriorityEvent("T1", Priority.HIGH, "Alert", "pub-123");
+
+        // Delay to ensure different timestamps
+        Thread.sleep(10);
+
         PriorityEvent event2 = new PriorityEvent("T1", Priority.HIGH, "Alert", "pub-123");
-        assertNotEquals(event1, event2); // timestamps differ
-        assertNotEquals(event1.hashCode(), event2.hashCode());
+
+        assertNotEquals(event1, event2, "Events with different timestamps should not be equal");
+        assertNotEquals(event1.hashCode(), event2.hashCode(), "Hash codes should differ due to different timestamps");
     }
+
 
     @Test
     void toStringTest() {

@@ -48,7 +48,6 @@ public class SubscriberMenu {
             }
         }
     }
-
     private void subscribe() {
         List<Publisher> publishers = eventBus.getAllPublishers().stream().toList();
         if (publishers.isEmpty()) {
@@ -135,39 +134,43 @@ public class SubscriberMenu {
     private EventFilter getFilterFromUser() {
         System.out.println("Select Filter:");
         System.out.println("1. High Priority Only");
-        System.out.println("2. Low Priority Only");
-        System.out.println("3. Time Window");
-        System.out.println("4. No Filter (All Events)");
+        System.out.println("2. Medium Priority Only");
+        System.out.println("3. Low Priority Only");
+        System.out.println("4. Time Window");
+        System.out.println("5. No Filter (All Events)");
         System.out.print("Your choice: ");
         int choice = readIntInput();
 
         return switch (choice) {
             case 1 -> new PriorityFilter(com.company.notification.event.Priority.HIGH);
-            case 2 -> new PriorityFilter(com.company.notification.event.Priority.LOW);
-            case 3 -> {
+            case 2 -> new PriorityFilter(com.company.notification.event.Priority.MEDIUM);
+            case 3 -> new PriorityFilter(com.company.notification.event.Priority.LOW);
+            case 4 -> {
                 try {
                     System.out.print("Enter start time (HH:mm): ");
                     String startStr = scanner.nextLine().trim();
                     System.out.print("Enter end time (HH:mm): ");
                     String endStr = scanner.nextLine().trim();
-                    if (startStr.isEmpty() || endStr.isEmpty()) throw new IllegalArgumentException("Time inputs cannot be empty.");
+
+                    if (startStr.isEmpty() || endStr.isEmpty())
+                        throw new IllegalArgumentException("Time inputs cannot be empty.");
 
                     LocalTime start = LocalTime.parse(startStr);
                     LocalTime end = LocalTime.parse(endStr);
                     yield new TimeWindowFilter(start, end);
                 } catch (DateTimeParseException | IllegalArgumentException e) {
                     System.out.println("Invalid time input. Using default filter.");
-//                    you want to return a value, you must use yield.
                     yield new AlwaysTrueFilter();
                 }
             }
-            case 4 -> new AlwaysTrueFilter();
+            case 5 -> new AlwaysTrueFilter();
             default -> {
                 System.out.println("Invalid choice. Using default filter.");
                 yield new AlwaysTrueFilter();
             }
         };
     }
+
 
     private int readIntInput() {
         try {

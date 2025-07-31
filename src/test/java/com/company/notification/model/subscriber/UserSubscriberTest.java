@@ -1,186 +1,146 @@
 package com.company.notification.model.subscriber;
 
-import com.company.notification.event.*;
+import com.company.notification.event.Event;
+import com.company.notification.event.Priority;
+import com.company.notification.event.TaskEvent;
 import com.company.notification.filters.EventFilter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
+import java.lang.reflect.Field;
+import java.util.PriorityQueue;
+import java.util.Queue;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class UserSubscriberTest {
 
-    private EventFilter mockFilter;
-    private UserSubscriber subscriber;
-    private TaskEvent mockTaskEvent;
+    private TaskEvent sampleEvent;
 
     @BeforeEach
-    void setUp() {
-        mockFilter = mock(EventFilter.class);
-        subscriber = new UserSubscriber("Alice", mockFilter);
-
-        mockTaskEvent = mock(TaskEvent.class);
-        when(mockTaskEvent.getTaskName()).thenReturn("MockTask");
-        when(mockTaskEvent.getTaskDescription()).thenReturn("Mock Description");
-    }
-
-    @Test
-    void testConstructorInitializesCorrectly() {
-        assertEquals("Alice", subscriber.getName());
-        assertEquals(mockFilter, subscriber.getFilter());
-    }
-
-
-
-
-
-    @Test
-    void testEnqueue_NullEvent_ShouldBeIgnored() {
-        // Capture output
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(out));
-
-        subscriber.enqueue(null);
-
-        String printed = out.toString();
-        assertTrue(printed.contains("Received null event. Ignored."));
-    }
-
-
-    @Test
-    void testEnqueueFilteredEventNotAccepted() {
-        Event event = new TaskEvent(
-                "Sample Task",
-                "Description",
-                "publisher-123",
-                Priority.MEDIUM
-        );
-        when(mockFilter.shouldProcess(event)).thenReturn(false);
-
-        subscriber.enqueue(event);
-
-        // Should not enqueue due to filter rejection
-        subscriber.processQueue(); // Should log "No events to process"
-    }
-
-    @Test
-    void testProcessMultipleEventTypes() {
-        when(mockFilter.shouldProcess(any())).thenReturn(true);
-
-        subscriber.enqueue(new TaskEvent(
-                "Task A",
-                "Description A",
-                "pub-1",
-                Priority.MEDIUM
-        ));
-
-        subscriber.enqueue(new PriorityEvent(
-                "Urgent Task",
-                Priority.HIGH,
-                "Urgent task description",
-                "pub-2"
-        ));
-
-        subscriber.enqueue(new HeartBeatEvent(
-                "pub-3",
-                Priority.LOW,
-                "Heartbeat Check",
-                "Regular health signal"
-        ));
-
-        subscriber.processQueue();  // Should process all 3 types
-    }
-
-
-
-
-    @Test
-    void testEnqueueAcceptedEvent() {
-        TaskEvent event = new TaskEvent(
-                "Sample Task",
-                "Description",
-                "publisher-123",
+    void setup() {
+        sampleEvent = new TaskEvent(
+                "Refactor Code",
+                "Improve system performance",
+                "pub-001",
                 Priority.HIGH
         );
-        when(mockFilter.shouldProcess(event)).thenReturn(true);
+    }
 
-        subscriber.enqueue(event);
-        subscriber.processQueue(); // Should process and print
+    @Test
+    void constructorShouldInitializeQueueAndFilterProperly() throws Exception {
+        EventFilter filter = event -> true;
+        UserSubscriber subscriber = new UserSubscriber("DevUser", filter);
+
+        // Reflection check for queue
+        Field queueField = UserSubscriber.class.getDeclaredField("queue");
+        queueField.setAccessible(true);
+        Object queueObj = queueField.get(subscriber);
+        assertNotNull(queueObj);
+        assertTrue(queueObj instanceof PriorityQueue);
+
+        // Check filter
+        assertEquals(filter, subscriber.getFilter());
+    }
+
+    @Test
+    void enqueueShouldIgnoreNullEvent() {
+        EventFilter filter = event -> true;
+        UserSubscriber subscriber = new UserSubscriber("NullHandler", filter);
+
+        assertDoesNotThrow(() -> subscriber.enqueue(null));
+    }
+
+    @Test
+    void enqueueShouldAddEventWhenFilterIsTrue() throws Exception {
+        EventFilter filter = event -> true;
+        UserSubscriber subscriber = new UserSubscriber("QueueAdder", filter);
+
+        subscriber.enqueue(sampleEvent);
+
+        Field queueField = UserSubscriber.class.getDeclaredField("queue");
+        queueField.setAccessible(true);
+        Queue<Event> queue = (Queue<Event>) queueField.get(subscriber);
+
+        assertEquals(1, queue.size());
+        assertEquals(sampleEvent, queue.peek());
+    }
+
+    @Test
+    void enqueueShouldNotAddEventWhenFilterIsFalse() throws Exception {
+        EventFilter filter = event -> false;
+        UserSubscriber subscriber = new UserSubscriber("Rejector", filter);
+
+        subscriber.enqueue(sampleEvent);
+
+        Field queueField = UserSubscriber.class.getDeclaredField("queue");
+        queueField.setAccessible(true);
+        Queue<Event> queue = (Queue<Event>) queueField.get(subscriber);
+
+        assertTrue(queue.isEmpty());
+    }
+
+    @Test
+    void processQueueShouldHandleEmptyQueueGracefully() {
+        EventFilter filter = event -> true;
+        UserSubscriber subscriber = new UserSubscriber("EmptyProcessor", filter);
+
+        assertDoesNotThrow(subscriber::processQueue);
+    }
+
+
+    @Test
+    void constructorShouldThrowWhenPriorityIsNull() {
+        assertThrows(IllegalArgumentException.class, () ->
+                new TaskEvent("T", "D", "pub", null));
     }
 
 
 
 
 
-
     @Test
-    void testEnqueue_WithPassingFilter_ShouldAddEvent() {
-        when(mockFilter.shouldProcess(mockTaskEvent)).thenReturn(true);
-        subscriber.enqueue(mockTaskEvent);
+    void processQueueShouldProcessEventsCorrectly_UsingReflection() throws Exception {
+        EventFilter filter = event -> true;
+        UserSubscriber subscriber = new UserSubscriber("Processor", filter);
 
-        // Capture processQueue output
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(out));
+        // Step 1: Enqueue event
+        subscriber.enqueue(sampleEvent);
 
-        subscriber.processQueue();
+        // Step 2: Check queue has 1 item before processing
+        Field queueField = UserSubscriber.class.getDeclaredField("queue");
+        queueField.setAccessible(true);
+        Queue<Event> queueBefore = (Queue<Event>) queueField.get(subscriber);
+        assertEquals(1, queueBefore.size(), "Queue should contain 1 event before processing");
 
-        String output = out.toString();
-        assertTrue(output.contains("MockTask"));
-        assertTrue(output.contains("Mock Description"));
-    }
+        // Step 3: Process the queue
+        subscriber.processQueue();  // This should print and clear the queue
 
-    @Test
-    void testEnqueue_WithFailingFilter_ShouldNotAddEvent() {
-        when(mockFilter.shouldProcess(mockTaskEvent)).thenReturn(false);
-        subscriber.enqueue(mockTaskEvent);
+        // Step 4: Check queue is empty after processing
+        Queue<Event> queueAfter = (Queue<Event>) queueField.get(subscriber);
+        assertTrue(queueAfter.isEmpty(), "Queue should be empty after processing");
 
-        // Capture processQueue output
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(out));
-
-        subscriber.processQueue();
-
-        String output = out.toString();
-        assertTrue(output.contains("No events to process"));
-    }
-
-
-
-
-
-
-
-
-
-    @Test
-    void testEnqueue_NoFilter_ShouldAddEvent() {
-        UserSubscriber subWithoutFilter = new UserSubscriber("Bob", null);
-        subWithoutFilter.enqueue(mockTaskEvent);
-
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(out));
-
-        subWithoutFilter.processQueue();
-
-        String output = out.toString();
-        assertTrue(output.contains("MockTask"));
+        // Step 5: Process again to confirm graceful handling of empty queue
+        assertDoesNotThrow(subscriber::processQueue);
     }
 
     @Test
     void testEqualsAndHashCode() {
-        UserSubscriber another = new UserSubscriber("Alice", mockFilter);
+        EventFilter filter = event -> true;
+        UserSubscriber u1 = new UserSubscriber("UserA", filter);
+        UserSubscriber u2 = new UserSubscriber("UserB", filter);
 
-        // should not be equal because UUIDs are different
-        assertNotEquals(subscriber, another);
-        assertNotEquals(subscriber.hashCode(), another.hashCode());
+        assertNotEquals(u1, u2);
+        assertEquals(u1, u1);
+        assertEquals(u1.hashCode(), u1.hashCode());
     }
 
     @Test
-    void testToStringDoesNotCrash() {
-        assertNotNull(subscriber.toString());
-        assertTrue(subscriber.toString().contains("UserSubscriber"));
+    void testToStringContainsName() {
+        UserSubscriber subscriber = new UserSubscriber("StringTester", event -> true);
+        String result = subscriber.toString();
+
+        assertTrue(result.contains("StringTester"));
+        assertTrue(result.contains("UserSubscriber"));
     }
 }

@@ -29,19 +29,59 @@ How It Works:
 7. Subscribers can manually process events from their queue.
 
 How to Run:
+Steps to Run from IDE
 - Open the project in your Java IDE (e.g., IntelliJ, Eclipse).
-- Compile the project (Java 17+ recommended).
+- Compile the project .
 - Run the MainApp.java class.
 - Follow the prompts to log in as SUBSCRIBER, PUBLISHER, or ADMIN.
 - Use the CLI menus to interact with the system (publish events, view notifications, etc.).
 - The system gracefully shuts down all schedulers on exit.
+
+Steps to Run from Command Line
+
+1.Clone or download the project.
+
+2.Navigate to the root project directory.
+
+3.Build the project:  "mvn clean install"
+                   
+4.Run the application:mvn exec:java -D exec.mainClass="com.company.notification.NotificationSystem"
+
+5.Select your role from the login prompt:
+
+Publisher
+
+Subscriber
+
+Admin
+
+6.Interact with the system using the CLI menus.
+
+7.The system gracefully shuts down all schedulers on exit.
+
+
+
+
+
+-----------------------------------------------------------------------------
+Steps to Run Tests
+
+1.Clone or download the project.
+
+2.Navigate to the root project directory.(where pom.xml is present)
+
+3.Run the tests: mvn test or mvn Clean test
+
+4.Test Report will be generated watch the console for the test results.
+
+
 
 Technologies Used:
 - Java 17+
 - Maven for build management
 - java.util collections (Map, Set, PriorityQueue)
 - java.time for timestamps and scheduling
-- OOP principles: Interface, Abstract Classes, Builder Pattern
+- OOP principles: Interface, Abstract Classes, 
 
 Key Features:
 - Multiple publishers and subscribers
@@ -51,4 +91,4 @@ Key Features:
 - CLI-based interaction per user role
 - Cleanly layered architecture
 
-Author: Sahil
+Author: Sahil Gani

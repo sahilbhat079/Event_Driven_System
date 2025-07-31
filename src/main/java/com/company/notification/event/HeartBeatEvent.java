@@ -10,13 +10,19 @@ public class HeartBeatEvent implements Event {
     private final String taskDescription;
     private final String taskName;
 
-    // Existing default constructor
+    // Default constructor
     public HeartBeatEvent(String publisherId, Priority priority) {
         this(publisherId, priority, "Heart Beat", "Reminder Event");
     }
 
-    // Overloaded constructor
     public HeartBeatEvent(String publisherId, Priority priority, String taskName, String taskDescription) {
+        if (publisherId == null || publisherId.isBlank()) {
+            throw new IllegalArgumentException("Publisher ID must not be null or blank");
+        }
+        if (priority == null) {
+            throw new IllegalArgumentException("Priority must not be null");
+        }
+
         this.timeStamp = LocalDateTime.now();
         this.publisherId = publisherId;
         this.priority = priority;

@@ -104,7 +104,7 @@ public class EventBus {
             EventFilter filter = subscriberFilterMap.getOrDefault(subscriber, e -> true);
             if (filter.shouldProcess(event)) {
                 subscriber.enqueue(event);
-//                logger.info("Event delivered to subscriber: " + subscriber.getName());
+                logger.info("Event delivered to subscriber: " + subscriber.getName());
             }
         }
 
@@ -134,10 +134,12 @@ public class EventBus {
         return new HashSet<>(publisherSubscriberMap.keySet());
     }
 
+
     public boolean hasSubscribers(Publisher publisher) {
         if (publisher == null) return false;
-        Set<Subscriber> subs = publisherSubscriberMap.get(publisher);
-        return subs != null && !subs.isEmpty();
+        return Optional.ofNullable(publisherSubscriberMap.get(publisher))
+                .map(subs -> !subs.isEmpty())
+                .orElse(false);
     }
 
     public Set<Subscriber> getSubscribers(Publisher publisher) {
@@ -146,14 +148,13 @@ public class EventBus {
     }
 
 
-    //publisher name with the help of publisher id
-    public String getPublisherName(String publisherId) {
-        for (Map.Entry<Publisher, Set<Subscriber>> entry : publisherSubscriberMap.entrySet()) {
-            if (entry.getKey().getId().equals(publisherId)) {
-                return entry.getKey().getName();
-            }
-        }
-        return null;
+    public Optional<String> getPublisherName(String publisherId) {
+        if (publisherId == null || publisherId.isBlank()) return Optional.empty();
+
+        return publisherSubscriberMap.keySet().stream()
+                .filter(p -> publisherId.equals(p.getId()))
+                .map(Publisher::getName)
+                .findFirst();
     }
 
 }

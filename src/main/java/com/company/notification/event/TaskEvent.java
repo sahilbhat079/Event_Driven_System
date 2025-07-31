@@ -36,6 +36,7 @@ public class TaskEvent implements Event {
         return timeStamp;
     }
 
+    @Override
     public Priority getPriority() {
         return priority;
     }
@@ -57,6 +58,7 @@ public class TaskEvent implements Event {
     public LocalDateTime getDateTime() {
         return timeStamp;
     }
+
 
     @Override
     public String getSourcePublisherId() {

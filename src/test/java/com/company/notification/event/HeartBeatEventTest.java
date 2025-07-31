@@ -37,4 +37,12 @@ class HeartBeatEventTest {
         assertTrue(output.contains("HB"));
         assertTrue(output.contains("Everything OK"));
     }
+
+    //lets do null checks
+    @Test
+    void nullChecks() {
+        assertThrows(IllegalArgumentException.class, () -> new HeartBeatEvent(null, Priority.HIGH));
+    }
+
+
 }

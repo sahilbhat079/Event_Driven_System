@@ -33,9 +33,6 @@ public class PriorityEvent implements Event {
         return priority;
     }
 
-    public LocalDateTime getTimeStamp() {
-        return timeStamp;
-    }
 
     public String getTaskName() {
         return taskName;

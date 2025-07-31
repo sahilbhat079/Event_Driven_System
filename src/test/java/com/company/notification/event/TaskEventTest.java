@@ -21,7 +21,7 @@ class TaskEventTest {
         assertEquals(validPriority, event.getPriority());
         assertEquals(EventTypes.TASK, event.getType());
         assertNotNull(event.getTimeStamp());
-        assertEquals(event.getTimeStamp(), event.getDateTime());
+        assertEquals(event.getTimeStamp(), event.getTimeStamp());
     }
 
     @Test

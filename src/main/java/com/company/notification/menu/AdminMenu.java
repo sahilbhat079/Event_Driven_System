@@ -1,6 +1,5 @@
 package com.company.notification.menu;
 
-
 import com.company.notification.core.EventBus;
 import com.company.notification.core.EventHistory;
 import com.company.notification.model.subscriber.Subscriber;
@@ -57,7 +56,12 @@ public class AdminMenu {
 
     private void viewAllEvents() {
         System.out.println("\nAll Events:");
-        eventHistory.getAllEvents().forEach(System.out::println);
+        Optional.ofNullable(eventHistory.getAllEvents())
+                .filter(list -> !list.isEmpty())
+                .ifPresentOrElse(
+                        list -> list.forEach(System.out::println),
+                        () -> System.out.println("No events found.")
+                );
     }
 
     private void viewEventsByType() {
@@ -68,27 +72,27 @@ public class AdminMenu {
         System.out.print("Enter your choice (1-3): ");
 
         String choice = scanner.nextLine().trim();
-        String eventType;
+        String eventType = switch (choice) {
+            case "1" -> "TASK";
+            case "2" -> "HEARTBEAT";
+            case "3" -> "PRIORITY";
+            default -> null;
+        };
 
-        switch (choice) {
-            case "1" -> eventType = "TASK";
-            case "2" -> eventType = "HEARTBEAT";
-            case "3" -> eventType = "PRIORITY";
-            default -> {
-                System.out.println("Invalid choice. Please select 1, 2, or 3.");
-                return;
-            }
-        }
-
-        List<EventHistory.EventRecord> filteredEvents = eventHistory.getEventsByType(eventType);
-
-        if (filteredEvents == null || filteredEvents.isEmpty()) {
-            System.out.println("No events found for type: " + eventType);
+        if (eventType == null) {
+            System.out.println("Invalid choice. Please select 1, 2, or 3.");
             return;
         }
 
-        System.out.println("Events of type " + eventType + ":");
-        filteredEvents.forEach(System.out::println);
+        Optional.ofNullable(eventHistory.getEventsByType(eventType))
+                .filter(list -> !list.isEmpty())
+                .ifPresentOrElse(
+                        list -> {
+                            System.out.println("Events of type " + eventType + ":");
+                            list.forEach(System.out::println);
+                        },
+                        () -> System.out.println("No events found for type: " + eventType)
+                );
     }
 
     private void viewEventsByPublisher() {
@@ -98,12 +102,23 @@ public class AdminMenu {
             System.out.println("Publisher ID cannot be empty.");
             return;
         }
-        eventHistory.getEventsByPublisher(pubId).forEach(System.out::println);
+
+        Optional.ofNullable(eventHistory.getEventsByPublisher(pubId))
+                .filter(list -> !list.isEmpty())
+                .ifPresentOrElse(
+                        list -> list.forEach(System.out::println),
+                        () -> System.out.println("No events found for publisher ID: " + pubId)
+                );
     }
 
     private void viewEventsInLastHour() {
         System.out.println("\nEvents from Last Hour:");
-        eventHistory.getEventsInLastHour().forEach(System.out::println);
+        Optional.ofNullable(eventHistory.getEventsInLastHour())
+                .filter(list -> !list.isEmpty())
+                .ifPresentOrElse(
+                        list -> list.forEach(System.out::println),
+                        () -> System.out.println("No events found in the last hour.")
+                );
     }
 
     private void viewEventsBetween() {
@@ -121,36 +136,37 @@ public class AdminMenu {
             int startHour = Integer.parseInt(startHourStr);
             int endHour = Integer.parseInt(endHourStr);
 
-            if (startHour < 0 || endHour < 0 || endHour > 23 || startHour > endHour) {
+            if (startHour < 0 || endHour > 23 || startHour > endHour) {
                 System.out.println("Invalid hour range. Please enter between 0 and 23 and ensure start <= end.");
                 return;
             }
 
             LocalDateTime now = LocalDateTime.now();
             LocalDateTime startDateTime = now.withHour(startHour).withMinute(0).withSecond(0).withNano(0);
-            LocalDateTime endDateTime = now.withHour(endHour).withMinute(59).withSecond(59).withNano(999999999);
-
-            //creating instant from local date time cause getEventsBetween requires instant
+            LocalDateTime endDateTime = now.withHour(endHour).withMinute(59).withSecond(59).withNano(999_999_999);
 
             Instant startInstant = startDateTime.atZone(ZoneId.systemDefault()).toInstant();
             Instant endInstant = endDateTime.atZone(ZoneId.systemDefault()).toInstant();
 
-            System.out.println("\nEvents between " + startHour + ":00 and " + endHour + ":00 today:");
-            eventHistory.getEventsBetween(startInstant, endInstant)
-                    .forEach(System.out::println);
+            Optional.ofNullable(eventHistory.getEventsBetween(startInstant, endInstant))
+                    .filter(list -> !list.isEmpty())
+                    .ifPresentOrElse(
+                            list -> {
+                                System.out.println("\nEvents between " + startHour + ":00 and " + endHour + ":00 today:");
+                                list.forEach(System.out::println);
+                            },
+                            () -> System.out.println("No events found in the selected time range.")
+                    );
 
         } catch (NumberFormatException e) {
             System.out.println("Invalid hour input. Please enter a number between 0 and 23.");
         }
     }
 
-
     private void countEventsByType() {
         System.out.println("\nEvent Counts by Type:");
 
-        Optional<Map<String, Long>> optionalCounts = Optional.ofNullable(eventHistory.countEventsByType());
-
-        optionalCounts
+        Optional.ofNullable(eventHistory.countEventsByType())
                 .filter(map -> !map.isEmpty())
                 .ifPresentOrElse(
                         map -> map.forEach((type, count) -> System.out.println(type + ": " + count)),
