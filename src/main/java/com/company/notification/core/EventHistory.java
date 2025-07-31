@@ -11,20 +11,21 @@ import java.util.stream.Collectors;
 public class EventHistory {
 
     private final List<EventRecord> history = new CopyOnWriteArrayList<>();
-
     // Immutable record for storage
     public static final class EventRecord {
         private final Event event;
         private final Instant timestamp;
         private final String publisherId;
+        private final String publisherName;
 
-        public EventRecord(Event event, String publisherId) {
-            if (event == null || publisherId == null) {
+        public EventRecord(Event event, String publisherid,String publisherName) {
+            if (event == null || publisherName == null) {
                 throw new IllegalArgumentException("Event and publisherId cannot be null");
             }
             this.event = event;
             this.timestamp = Instant.now();
-            this.publisherId = publisherId;
+            this.publisherId = publisherid;
+            this.publisherName = publisherName;
         }
 
         public Event getEvent() {
@@ -41,7 +42,7 @@ public class EventHistory {
 
         @Override
         public String toString() {
-            return "[" + timestamp + "] from " + publisherId + " -> " + event;
+            return "[timestamp: " + timestamp + "] from " + publisherName + " ( publisherId: " + publisherId + ")"    + " -> " + event;
         }
 
         @Override
@@ -63,7 +64,7 @@ public class EventHistory {
         if (event == null || publisher == null) {
             throw new IllegalArgumentException("Event and Publisher cannot be null");
         }
-        history.add(new EventRecord(event, publisher.getId()));
+        history.add(new EventRecord(event, publisher.getId(), publisher.getName()));
     }
 
     public List<EventRecord> getAllEvents() {

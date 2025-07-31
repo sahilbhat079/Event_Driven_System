@@ -15,6 +15,15 @@ public class AdminMenu {
     private final EventHistory eventHistory;
     private final Scanner scanner = new Scanner(System.in);
 
+    // ANSI Colors
+    private static final String RESET = "\u001B[0m";
+    private static final String RED = "\u001B[31m";
+    private static final String GREEN = "\u001B[32m";
+    private static final String YELLOW = "\u001B[33m";
+    private static final String BLUE = "\u001B[34m";
+    private static final String CYAN = "\u001B[36m";
+    private static final String BOLD = "\u001B[1m";
+
     public AdminMenu(EventBus eventBus, Subscriber admin, EventHistory eventHistory) {
         this.eventBus = Objects.requireNonNull(eventBus, "EventBus must not be null");
         this.admin = Objects.requireNonNull(admin, "Admin subscriber must not be null");
@@ -23,7 +32,7 @@ public class AdminMenu {
 
     public void display() {
         while (true) {
-            System.out.println("\n==== Admin Menu ====");
+            System.out.println(BOLD + BLUE + "\n========= Admin Menu =========" + RESET);
             System.out.println("1. Process Admin Queue");
             System.out.println("2. View All Events");
             System.out.println("3. View Events by Type");
@@ -33,7 +42,7 @@ public class AdminMenu {
             System.out.println("7. Count Events by Type");
             System.out.println("8. Clear Event History");
             System.out.println("9. Exit to Main Menu");
-            System.out.print("Enter choice: ");
+            System.out.print(YELLOW + "Enter choice: " + RESET);
 
             String choice = scanner.nextLine().trim();
             switch (choice) {
@@ -46,30 +55,30 @@ public class AdminMenu {
                 case "7" -> countEventsByType();
                 case "8" -> clearHistory();
                 case "9" -> {
-                    System.out.println("Returning to Main Menu...");
+                    System.out.println(GREEN + "Returning to Main Menu..." + RESET);
                     return;
                 }
-                default -> System.out.println("Invalid choice. Try again.");
+                default -> System.out.println(RED + "Invalid choice. Try again." + RESET);
             }
         }
     }
 
     private void viewAllEvents() {
-        System.out.println("\nAll Events:");
+        System.out.println(BOLD + CYAN + "\n--- All Events ---" + RESET);
         Optional.ofNullable(eventHistory.getAllEvents())
                 .filter(list -> !list.isEmpty())
                 .ifPresentOrElse(
                         list -> list.forEach(System.out::println),
-                        () -> System.out.println("No events found.")
+                        () -> System.out.println(YELLOW + "No events found." + RESET)
                 );
     }
 
     private void viewEventsByType() {
-        System.out.println("Choose Event Type to View:");
+        System.out.println(BOLD + CYAN + "\n--- View Events by Type ---" + RESET);
         System.out.println("1. TASK");
         System.out.println("2. HEARTBEAT");
         System.out.println("3. PRIORITY");
-        System.out.print("Enter your choice (1-3): ");
+        System.out.print(YELLOW + "Enter your choice (1-3): " + RESET);
 
         String choice = scanner.nextLine().trim();
         String eventType = switch (choice) {
@@ -80,7 +89,7 @@ public class AdminMenu {
         };
 
         if (eventType == null) {
-            System.out.println("Invalid choice. Please select 1, 2, or 3.");
+            System.out.println(RED + "Invalid choice. Please select 1, 2, or 3." + RESET);
             return;
         }
 
@@ -88,18 +97,18 @@ public class AdminMenu {
                 .filter(list -> !list.isEmpty())
                 .ifPresentOrElse(
                         list -> {
-                            System.out.println("Events of type " + eventType + ":");
+                            System.out.println(GREEN + "Events of type " + eventType + ":" + RESET);
                             list.forEach(System.out::println);
                         },
-                        () -> System.out.println("No events found for type: " + eventType)
+                        () -> System.out.println(YELLOW + "No events found for type: " + eventType + RESET)
                 );
     }
 
     private void viewEventsByPublisher() {
-        System.out.print("Enter publisher ID: ");
+        System.out.print(CYAN + "Enter publisher ID: " + RESET);
         String pubId = scanner.nextLine().trim();
         if (pubId.isEmpty()) {
-            System.out.println("Publisher ID cannot be empty.");
+            System.out.println(RED + "Publisher ID cannot be empty." + RESET);
             return;
         }
 
@@ -107,17 +116,17 @@ public class AdminMenu {
                 .filter(list -> !list.isEmpty())
                 .ifPresentOrElse(
                         list -> list.forEach(System.out::println),
-                        () -> System.out.println("No events found for publisher ID: " + pubId)
+                        () -> System.out.println(YELLOW + "No events found for publisher ID: " + pubId + RESET)
                 );
     }
 
     private void viewEventsInLastHour() {
-        System.out.println("\nEvents from Last Hour:");
+        System.out.println(BOLD + CYAN + "\n--- Events in Last Hour ---" + RESET);
         Optional.ofNullable(eventHistory.getEventsInLastHour())
                 .filter(list -> !list.isEmpty())
                 .ifPresentOrElse(
                         list -> list.forEach(System.out::println),
-                        () -> System.out.println("No events found in the last hour.")
+                        () -> System.out.println(YELLOW + "No events found in the last hour." + RESET)
                 );
     }
 
@@ -125,14 +134,14 @@ public class AdminMenu {
         try {
             DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
-            System.out.print("Enter start time (HH:mm): ");
+            System.out.print(YELLOW + "Enter start time (HH:mm): " + RESET);
             String startInput = scanner.nextLine().trim();
 
-            System.out.print("Enter end time (HH:mm): ");
+            System.out.print(YELLOW + "Enter end time (HH:mm): " + RESET);
             String endInput = scanner.nextLine().trim();
 
             if (startInput.isEmpty() || endInput.isEmpty()) {
-                System.out.println("Time inputs cannot be empty.");
+                System.out.println(RED + "Time inputs cannot be empty." + RESET);
                 return;
             }
 
@@ -140,51 +149,48 @@ public class AdminMenu {
             LocalTime endTime = LocalTime.parse(endInput, timeFormatter);
 
             if (startTime.isAfter(endTime)) {
-                System.out.println("Start time must be before or equal to end time.");
+                System.out.println(RED + "Start time must be before or equal to end time." + RESET);
                 return;
             }
 
             LocalDate today = LocalDate.now();
-            LocalDateTime startDateTime = LocalDateTime.of(today, startTime);
-            LocalDateTime endDateTime = LocalDateTime.of(today, endTime);
-
-            Instant startInstant = startDateTime.atZone(ZoneId.systemDefault()).toInstant();
-            Instant endInstant = endDateTime.atZone(ZoneId.systemDefault()).toInstant();
+            Instant startInstant = LocalDateTime.of(today, startTime).atZone(ZoneId.systemDefault()).toInstant();
+            Instant endInstant = LocalDateTime.of(today, endTime).atZone(ZoneId.systemDefault()).toInstant();
 
             Optional.ofNullable(eventHistory.getEventsBetween(startInstant, endInstant))
                     .filter(list -> !list.isEmpty())
                     .ifPresentOrElse(
                             list -> {
-                                System.out.println("\nEvents between " + startInput + " and " + endInput + " today:");
+                                System.out.println(GREEN + "\nEvents between " + startInput + " and " + endInput + ":" + RESET);
                                 list.forEach(System.out::println);
                             },
-                            () -> System.out.println("No events found in the selected time range.")
+                            () -> System.out.println(YELLOW + "No events found in the selected time range." + RESET)
                     );
 
         } catch (DateTimeParseException e) {
-            System.out.println("Invalid format. Please enter time in HH:mm format (e.g., 09:00 or 17:30).");
+            System.out.println(RED + "Invalid format. Please enter time in HH:mm format (e.g., 09:00 or 17:30)." + RESET);
         }
     }
 
     private void countEventsByType() {
-        System.out.println("\nEvent Counts by Type:");
-
+        System.out.println(BOLD + CYAN + "\n--- Event Counts by Type ---" + RESET);
         Optional.ofNullable(eventHistory.countEventsByType())
                 .filter(map -> !map.isEmpty())
                 .ifPresentOrElse(
-                        map -> map.forEach((type, count) -> System.out.println(type + ": " + count)),
-                        () -> System.out.println("No events have been published yet.")
+                        map -> map.forEach((type, count) ->
+                                System.out.println(GREEN + type + ": " + count + RESET)),
+                        () -> System.out.println(YELLOW + "No events have been published yet." + RESET)
                 );
     }
 
     private void clearHistory() {
-        System.out.print("Are you sure you want to clear all event history? (yes/no): ");
+        System.out.print(YELLOW + "Are you sure you want to clear all event history? (yes/no): " + RESET);
         String input = scanner.nextLine().trim();
         if (input.equalsIgnoreCase("yes")) {
             eventHistory.clear();
-            System.out.println("Event history cleared.");
+            System.out.println(RED + "Event history cleared." + RESET);
         } else {
-            System.out.println("Clear operation aborted.");
+            System.out.println(GREEN + "Clear operation aborted." + RESET);
         }
     }
 }

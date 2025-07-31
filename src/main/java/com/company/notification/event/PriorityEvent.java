@@ -29,6 +29,7 @@ public class PriorityEvent implements Event {
         this.sourcePublisherId = sourcePublisherId;
     }
 
+    @Override
     public Priority getPriority() {
         return priority;
     }

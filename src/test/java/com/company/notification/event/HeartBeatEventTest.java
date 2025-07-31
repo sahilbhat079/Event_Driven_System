@@ -23,8 +23,9 @@ class HeartBeatEventTest {
     }
 
     @Test
-    void equalityTestWithDifferentTime() {
+    void equalityTestWithDifferentTime() throws InterruptedException {
         HeartBeatEvent e1 = new HeartBeatEvent("pub", Priority.HIGH);
+        Thread.sleep(10);
         HeartBeatEvent e2 = new HeartBeatEvent("pub", Priority.HIGH);
         assertNotEquals(e1, e2); // different timestamp
         assertNotEquals(e1.hashCode(), e2.hashCode());
