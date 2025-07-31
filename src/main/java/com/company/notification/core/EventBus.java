@@ -64,7 +64,8 @@ public class EventBus {
                 .computeIfAbsent(subscriber, k -> ConcurrentHashMap.newKeySet())
                 .add(publisher);
 
-        subscriberFilterMap.put(subscriber, filter);
+        subscriberFilterMap.putIfAbsent(subscriber, filter);
+
         logger.info(subscriber.getName() + " subscribed to " + publisher.getName());
     }
 
@@ -73,10 +74,21 @@ public class EventBus {
             throw new IllegalArgumentException("Subscriber or Publisher cannot be null");
         }
 
-        Set<Subscriber> subscribers = publisherSubscriberMap.get(publisher);
-        if (subscribers != null) {
-            subscribers.remove(subscriber);
-        }
+
+//        Set<Subscriber> subscribers = publisherSubscriberMap.get(publisher);
+//        if (subscribers != null) {
+//            subscribers.remove(subscriber);
+//        }
+
+        // Use computeIfPresent for atomic update
+        publisherSubscriberMap.computeIfPresent(publisher, (pub, subs) -> {
+            subs.remove(subscriber);
+            return subs.isEmpty() ? null : subs;
+        });
+
+
+
+
 
         subscriberPublisherMap.computeIfPresent(subscriber, (sub, pubs) -> {
             pubs.remove(publisher);
@@ -100,19 +112,21 @@ public class EventBus {
         }
 
         Set<Subscriber> subscribers = new HashSet<>(publisherSubscriberMap.getOrDefault(publisher, Set.of()));
+
         for (Subscriber subscriber : subscribers) {
             EventFilter filter = subscriberFilterMap.getOrDefault(subscriber, e -> true);
             if (filter.shouldProcess(event)) {
                 subscriber.enqueue(event);
-                logger.info("Event delivered to subscriber: " + subscriber.getName());
+//                logger.info("Event delivered to subscriber: " + subscriber.getName());
             }
+
         }
 
         for (Subscriber admin : new HashSet<>(adminSubscribers)) {
             EventFilter filter = subscriberFilterMap.get(admin);
             if (filter == null || filter.shouldProcess(event)) {
                 admin.enqueue(event);
-                logger.info("Event delivered to admin: " + admin.getName());
+//                logger.info("Event delivered to admin: " + admin.getName());
             }
         }
 
@@ -155,6 +169,16 @@ public class EventBus {
                 .filter(p -> publisherId.equals(p.getId()))
                 .map(Publisher::getName)
                 .findFirst();
+    }
+
+
+    public void updateFilter(Subscriber subscriber, EventFilter newFilter) {
+        if (subscriber == null || newFilter == null) {
+            throw new IllegalArgumentException("Subscriber and Filter cannot be null");
+        }
+
+        subscriberFilterMap.put(subscriber, newFilter);
+        logger.info("Filter updated for subscriber: " + subscriber.getName());
     }
 
 }

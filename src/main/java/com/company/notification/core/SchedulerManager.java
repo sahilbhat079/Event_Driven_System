@@ -64,6 +64,16 @@ public class SchedulerManager {
             scheduler.shutdown();
             logger.info("Scheduler removed for publisher: " + publisher.getName());
         }
-}
+    }
+
+    // method to check whether there is a scheduler or not for the publisher
+    public boolean hasScheduler(Publisher publisher) {
+        return schedulerMap.containsKey(publisher);
+    }
+
+
+
+
+
 
 }

@@ -64,3 +64,34 @@
 2025-07-30 18:01:37 [main] INFO  c.c.notification.menu.PublisherMenu - Exiting Publisher Menu for publisher: sahil
 2025-07-30 19:26:13 [main] INFO  com.company.notification.Main - Starting notification system...
 2025-07-30 19:26:19 [main] INFO  com.company.notification.Main - Starting notification system...
+2025-07-31 10:34:02 [main] INFO  com.company.notification.Main - Starting notification system...
+2025-07-31 10:38:01 [main] INFO  c.c.notification.menu.PublisherMenu - Published LOW priority task event from publisher: sahil
+2025-07-31 10:38:39 [main] WARN  c.c.notification.menu.PublisherMenu - Cannot start reminder — no subscribers for publisher: sahil
+2025-07-31 10:39:22 [main] INFO  c.c.notification.menu.PublisherMenu - Stopped reminder scheduler for publisher: sahil
+2025-07-31 10:44:03 [main] INFO  c.c.notification.menu.PublisherMenu - Exiting Publisher Menu for publisher: sahil
+2025-07-31 11:03:05 [main] WARN  c.c.notification.menu.PublisherMenu - Cannot start reminder — no subscribers for publisher: majid
+2025-07-31 11:03:08 [main] INFO  c.c.notification.menu.PublisherMenu - Exiting Publisher Menu for publisher: majid
+2025-07-31 11:04:14 [main] INFO  c.c.notification.menu.PublisherMenu - Started reminder scheduler for publisher: majid with interval: 3s
+2025-07-31 11:04:29 [main] INFO  c.c.notification.menu.PublisherMenu - Published LOW priority task event from publisher: majid
+2025-07-31 11:04:38 [main] INFO  c.c.notification.menu.PublisherMenu - Stopped reminder scheduler for publisher: majid
+2025-07-31 11:04:47 [main] INFO  c.c.notification.menu.PublisherMenu - Started reminder scheduler for publisher: majid with interval: 2s
+2025-07-31 11:04:50 [main] INFO  c.c.notification.menu.PublisherMenu - Exiting Publisher Menu for publisher: majid
+2025-07-31 11:05:04 [main] INFO  c.c.notification.menu.PublisherMenu - Started reminder scheduler for publisher: sahil with interval: 1s
+2025-07-31 11:05:07 [main] INFO  c.c.notification.menu.PublisherMenu - Exiting Publisher Menu for publisher: sahil
+2025-07-31 11:07:48 [main] INFO  com.company.notification.Main - Starting notification system...
+2025-07-31 11:07:55 [main] INFO  c.c.notification.menu.PublisherMenu - Exiting Publisher Menu for publisher: sahil
+2025-07-31 11:08:03 [main] INFO  c.c.notification.menu.PublisherMenu - Exiting Publisher Menu for publisher: majid
+2025-07-31 11:09:46 [main] INFO  c.c.notification.menu.PublisherMenu - Published LOW priority task event from publisher: sahil
+2025-07-31 11:09:55 [main] INFO  c.c.notification.menu.PublisherMenu - Started reminder scheduler for publisher: sahil with interval: 3s
+2025-07-31 11:09:58 [main] INFO  c.c.notification.menu.PublisherMenu - Exiting Publisher Menu for publisher: sahil
+2025-07-31 11:10:15 [main] INFO  c.c.notification.menu.PublisherMenu - Published HIGH priority event from publisher: majid
+2025-07-31 11:10:19 [main] INFO  c.c.notification.menu.PublisherMenu - Started reminder scheduler for publisher: majid with interval: 3s
+2025-07-31 11:10:22 [main] INFO  c.c.notification.menu.PublisherMenu - Exiting Publisher Menu for publisher: majid
+2025-07-31 11:22:02 [main] INFO  com.company.notification.Main - Starting notification system...
+2025-07-31 11:22:34 [main] INFO  c.c.notification.menu.PublisherMenu - Published LOW priority task event from publisher: sahil
+2025-07-31 11:22:46 [main] INFO  c.c.notification.menu.PublisherMenu - Scheduler does not exist for publisher: sahil
+2025-07-31 11:22:52 [main] INFO  c.c.notification.menu.PublisherMenu - Exiting Publisher Menu for publisher: sahil
+2025-07-31 11:33:43 [main] INFO  com.company.notification.Main - Starting notification system...
+2025-07-31 11:33:50 [main] INFO  c.c.notification.menu.PublisherMenu - Exiting Publisher Menu for publisher: sahil
+2025-07-31 11:34:31 [main] INFO  c.c.notification.menu.PublisherMenu - Started reminder scheduler for publisher: sahil with interval: 3s
+2025-07-31 11:34:32 [main] INFO  c.c.notification.menu.PublisherMenu - Exiting Publisher Menu for publisher: sahil

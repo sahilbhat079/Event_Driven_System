@@ -70,7 +70,6 @@ public class SubscriberMenu {
         Publisher publisher = publishers.get(idx);
         EventFilter filter = getFilterFromUser();
         eventBus.subscribe(subscriber, publisher, filter);
-        System.out.println("Subscribed to " + publisher.getName());
     }
 
     private void unsubscribe() {
@@ -107,6 +106,7 @@ public class SubscriberMenu {
 
     private void changeFilter() {
         List<Publisher> subscriptions = eventBus.getPublishersForSubscriber(subscriber).stream().toList();
+
         if (subscriptions.isEmpty()) {
             System.out.println("You are not subscribed to any publishers.");
             return;
@@ -116,6 +116,7 @@ public class SubscriberMenu {
         for (int i = 0; i < subscriptions.size(); i++) {
             System.out.println((i + 1) + ". " + subscriptions.get(i).getName());
         }
+
         System.out.print("Enter publisher number: ");
         int idx = readIntInput() - 1;
 
@@ -125,10 +126,12 @@ public class SubscriberMenu {
         }
 
         Publisher publisher = subscriptions.get(idx);
-        eventBus.unsubscribe(subscriber, publisher);
+
+
         EventFilter newFilter = getFilterFromUser();
-        eventBus.subscribe(subscriber, publisher, newFilter);
+        eventBus.updateFilter(subscriber, newFilter);
         System.out.println("Filter updated for " + publisher.getName());
+
     }
 
     private EventFilter getFilterFromUser() {

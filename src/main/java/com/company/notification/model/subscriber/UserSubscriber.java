@@ -54,7 +54,7 @@ public class UserSubscriber extends BaseSubscriber implements Subscriber{
 
             } else if (event instanceof com.company.notification.event.HeartBeatEvent heartbeatEvent) {
                 System.out.println("\u001B[32m[Heartbeat Event]\u001B[0m");
-                System.out.println("\u001B[32m  Sending periodic heartbeat...\u001B[0m");
+                System.out.println("\u001B[32m  Task Name     : \u001B[0m" + heartbeatEvent.getTaskName());
                 System.out.println("\u001B[32m  Priority Level: \u001B[0m" + heartbeatEvent.getPriority());
             } else {
                 System.out.println("\u001B[90m[Unknown Event] \u001B[0m" + event);

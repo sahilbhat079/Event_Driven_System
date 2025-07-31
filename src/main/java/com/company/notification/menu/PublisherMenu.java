@@ -110,7 +110,6 @@ public class PublisherMenu {
     private void startReminder() {
         if (!eventBus.hasSubscribers(publisher)) {
             logger.warn("Cannot start reminder — no subscribers for publisher: {}", publisher.getName());
-            System.out.println("Cannot start reminder — no subscribers for this publisher.");
             return;
         }
 
@@ -171,6 +170,11 @@ public class PublisherMenu {
     }
 
     private void stopReminder() {
+        //only stop if scheduler is there otherwise do nothing
+        if (!schedulerManager.hasScheduler(publisher)) {
+            logger.info("Scheduler does not exist for publisher: {}", publisher.getName());
+            return;
+        }
         schedulerManager.shutdownScheduler(publisher);
         logger.info("Stopped reminder scheduler for publisher: {}", publisher.getName());
     }
